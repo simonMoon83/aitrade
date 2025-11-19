@@ -55,7 +55,12 @@
 
 {% block content %}
 <div class="card">
-    <h3>📋 일일 성과 레포트</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3>📋 일일 성과 레포트</h3>
+        <button class="btn btn-primary" onclick="generateReport()" id="generate-btn">
+            ✨ 새 레포트 생성
+        </button>
+    </div>
     <div class="table-container">
         <table class="table" id="reports-table">
             <thead>
@@ -92,6 +97,40 @@
 
 {% block extra_js %}
 <script>
+    // 레포트 생성 함수
+    function generateReport() {
+        const btn = document.getElementById('generate-btn');
+        const originalText = btn.textContent;
+
+        btn.disabled = true;
+        btn.textContent = '생성 중...';
+
+        fetch('/api/reports/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ 레포트가 성공적으로 생성되었습니다!');
+                // 레포트 목록 새로고침
+                location.reload();
+            } else {
+                alert('❌ 레포트 생성 실패: ' + (data.error || '알 수 없는 오류'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ 레포트 생성 중 오류가 발생했습니다: ' + error.message);
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        });
+    }
+
     const modal = document.getElementById('report-modal');
     const closeBtn = document.getElementsByClassName('close')[0];
 
