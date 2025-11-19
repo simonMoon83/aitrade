@@ -44,8 +44,8 @@
 {% block content %}
 <div class="card">
     <div class="card">
-        <div class="card-header">
-            <h3>📝 시스템 로그</h3>
+        <h3>📝 시스템 로그</h3>
+        <div class="action-bar" style="margin-bottom: 1rem; display: flex; justify-content: flex-end;">
             <div class="btn-group" style="flex-wrap: wrap;">
                 <button class="btn btn-info" onclick="refreshLogs()">
                     <span>🔄</span>
@@ -57,7 +57,6 @@
                 </button>
             </div>
         </div>
-
         <!-- Filter Section -->
         <div class="filter-section">
             <div class="filter-group">
