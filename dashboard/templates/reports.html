@@ -145,11 +145,23 @@
     }
 
     function showReportDetails(date) {
+        // 날짜 형식을 YYYYMMDD로 변환
+        let formattedDate = date;
+
+        // 날짜가 YYYY-MM-DD 형식이면 YYYYMMDD로 변환
+        if (date.includes('-')) {
+            formattedDate = date.replace(/-/g, '');
+        }
+        // 날짜가 YYYY/MM/DD 형식이면 YYYYMMDD로 변환
+        else if (date.includes('/')) {
+            formattedDate = date.replace(/\//g, '');
+        }
+
         document.getElementById('report-date').textContent = date;
         document.getElementById('report-details').innerHTML = '<p style="text-align:center; color:#999;">로딩 중...</p>';
         modal.style.display = 'block';
 
-        fetch(`/api/reports/${date}`)
+        fetch(`/api/reports/${formattedDate}`)
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
