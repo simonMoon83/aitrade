@@ -193,13 +193,16 @@
                     report.trades.forEach(trade => {
                         const isBuy = trade.order_type === 'buy';
                         const pnl = trade.pnl || 0;
+                        const price = trade.price || 0;
+                        const quantity = trade.quantity || 0;
+                        const timestamp = trade.timestamp || new Date().toISOString();
                         html += `
                             <tr>
-                                <td>${new Date(trade.timestamp).toLocaleString()}</td>
-                                <td>${trade.symbol}</td>
-                                <td><span class="badge ${isBuy ? 'badge-success' : 'badge-danger'}">${trade.order_type.toUpperCase()}</span></td>
-                                <td>${trade.quantity}</td>
-                                <td>$${trade.price.toFixed(2)}</td>
+                                <td>${new Date(timestamp).toLocaleString()}</td>
+                                <td>${trade.symbol || 'N/A'}</td>
+                                <td><span class="badge ${isBuy ? 'badge-success' : 'badge-danger'}">${(trade.order_type || 'unknown').toUpperCase()}</span></td>
+                                <td>${quantity}</td>
+                                <td>$${price.toFixed(2)}</td>
                                 <td class="${pnl >= 0 ? 'text-success' : 'text-danger'}">${pnl ? '$' + pnl.toFixed(2) : '-'}</td>
                             </tr>
                         `;
@@ -237,6 +240,10 @@
                     const row = tbody.insertRow();
                     const profit = report.profit || 0;
                     const return_pct = (report.return_pct || 0) * 100;
+                    const win_rate = (report.win_rate || 0) * 100;
+                    const mdd = (report.mdd || 0) * 100;
+                    const sharpe = report.sharpe_ratio || 0;
+                    const total_trades = report.total_trades || 0;
 
                     row.style.cursor = 'pointer';
                     row.onclick = function () {
@@ -244,13 +251,13 @@
                     };
 
                     row.innerHTML = `
-                        <td data-label="날짜" style="font-weight:600;">${report.date}</td>
-                        <td data-label="총 거래수">${report.total_trades}회</td>
-                        <td data-label="승률">${(report.win_rate * 100).toFixed(1)}%</td>
+                        <td data-label="날짜" style="font-weight:600;">${report.date || 'N/A'}</td>
+                        <td data-label="총 거래수">${total_trades}회</td>
+                        <td data-label="승률">${win_rate.toFixed(1)}%</td>
                         <td data-label="수익금" class="${profit >= 0 ? 'text-success' : 'text-danger'}">$${profit.toFixed(2)}</td>
                         <td data-label="수익률" class="${return_pct >= 0 ? 'text-success' : 'text-danger'}">${return_pct.toFixed(2)}%</td>
-                        <td data-label="최대 낙폭" class="text-danger">-${(report.mdd * 100).toFixed(2)}%</td>
-                        <td data-label="샤프 지수">${report.sharpe_ratio.toFixed(2)}</td>
+                        <td data-label="최대 낙폭" class="text-danger">-${mdd.toFixed(2)}%</td>
+                        <td data-label="샤프 지수">${sharpe.toFixed(2)}</td>
                     `;
                 });
             })
