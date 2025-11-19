@@ -402,19 +402,25 @@ class ReportGenerator:
     
     def _create_monthly_returns_heatmap(self, daily_values: pd.DataFrame):
         """월별 수익률 히트맵"""
-        daily_values['date'] = pd.to_datetime(daily_values['date'])
-        daily_values.set_index('date', inplace=True)
+        # 데이터프레임 복사본 생성하여 원본 보존
+        df = daily_values.copy()
+        
+        # 날짜 컬럼을 datetime으로 변환
+        df['date'] = pd.to_datetime(df['date'])
+        df.set_index('date', inplace=True)
         
         # 월별 수익률 계산
-        monthly_returns = daily_values['portfolio_value'].resample('M').last().pct_change().dropna()
+        monthly_returns = df['portfolio_value'].resample('ME').last().pct_change().dropna()
         
-        # 연도-월 매트릭스 생성
-        monthly_returns.index = pd.to_datetime(monthly_returns.index)
-        monthly_returns['year'] = monthly_returns.index.year
-        monthly_returns['month'] = monthly_returns.index.month
+        # 데이터프레임으로 변환
+        monthly_df = monthly_returns.to_frame(name='return')
         
-        pivot_table = monthly_returns.pivot_table(
-            values='portfolio_value', 
+        # 연도와 월 추출
+        monthly_df['year'] = monthly_df.index.year
+        monthly_df['month'] = monthly_df.index.month
+        
+        pivot_table = monthly_df.pivot_table(
+            values='return', 
             index='year', 
             columns='month', 
             aggfunc='first'

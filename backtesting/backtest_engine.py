@@ -12,7 +12,7 @@ from config import *
 from utils.logger import setup_logger
 from utils.data_collector import collect_stock_data
 from utils.feature_engineering import add_technical_indicators
-from strategies.buy_low_sell_high import BuyLowSellHighStrategy
+from strategies.improved.buy_low_sell_high import ImprovedBuyLowSellHighStrategy
 from backtesting.portfolio_manager import PortfolioManager, OrderType
 
 logger = setup_logger("backtest_engine")
@@ -42,7 +42,7 @@ class BacktestEngine:
         # 데이터 저장
         self.data: Dict[str, pd.DataFrame] = {}
         self.portfolio_manager = PortfolioManager(initial_capital)
-        self.strategy = BuyLowSellHighStrategy()
+        self.strategy = ImprovedBuyLowSellHighStrategy()
         
         # 결과 저장
         self.results = {}

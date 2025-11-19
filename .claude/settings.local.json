@@ -18,7 +18,8 @@
       "Bash(powershell -Command:*)",
       "Bash(mv:*)",
       "Bash(pip install:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(claude --version)"
     ],
     "deny": [],
     "ask": []
