@@ -43,9 +43,10 @@
 
 {% block content %}
 <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap: wrap; gap: 1rem;">
+    <div class="header-actions"
+        style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap: wrap; gap: 1rem;">
         <h3>📝 시스템 로그</h3>
-        <div class="btn-group">
+        <div class="btn-group" style="flex-wrap: wrap;">
             <button class="btn btn-info" onclick="refreshLogs()">
                 <span>🔄</span>
                 <span>새로고침</span>
