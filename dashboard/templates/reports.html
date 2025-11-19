@@ -2,6 +2,57 @@
 
 {% block title %}AI 트레이더 - 일일 레포트{% endblock %}
 
+{% block extra_css %}
+<style>
+    .table tr {
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .table tr:hover {
+        background: #f8fafc;
+    }
+
+    /* Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 2rem;
+        border: 1px solid #888;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: #000;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="card">
     <h3>📋 일일 성과 레포트</h3>
@@ -26,10 +77,110 @@
         </table>
     </div>
 </div>
+
+<!-- Modal for Report Details -->
+<div id="report-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>📊 레포트 상세: <span id="report-date"></span></h2>
+        <div id="report-details" style="margin-top: 1rem;">
+            <p style="text-align:center; color:#999;">로딩 중...</p>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    const modal = document.getElementById('report-modal');
+    const closeBtn = document.getElementsByClassName('close')[0];
+
+    closeBtn.onclick = function () {
+        modal.style.display = 'none';
+    }
+
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    function showReportDetails(date) {
+        document.getElementById('report-date').textContent = date;
+        document.getElementById('report-details').innerHTML = '<p style="text-align:center; color:#999;">로딩 중...</p>';
+        modal.style.display = 'block';
+
+        fetch(`/api/reports/${date}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('report-details').innerHTML = `<p style="color:red;">오류: ${data.error}</p>`;
+                    return;
+                }
+
+                const report = data.report || data;
+                let html = `
+                    <div class="card" style="margin-bottom: 1rem;">
+                        <h4>📈 성과 요약</h4>
+                        <table class="table">
+                            <tr><td><strong>총 거래 수:</strong></td><td>${report.total_trades || 0}회</td></tr>
+                            <tr><td><strong>승률:</strong></td><td>${((report.win_rate || 0) * 100).toFixed(2)}%</td></tr>
+                            <tr><td><strong>수익금:</strong></td><td class="${(report.profit || 0) >= 0 ? 'text-success' : 'text-danger'}">$${(report.profit || 0).toFixed(2)}</td></tr>
+                            <tr><td><strong>수익률:</strong></td><td>${((report.return_pct || 0) * 100).toFixed(2)}%</td></tr>
+                            <tr><td><strong>최대 낙폭:</strong></td><td class="text-danger">${((report.mdd || 0) * 100).toFixed(2)}%</td></tr>
+                            <tr><td><strong>샤프 지수:</strong></td><td>${(report.sharpe_ratio || 0).toFixed(3)}</td></tr>
+                        </table>
+                    </div>
+                `;
+
+                if (report.trades && report.trades.length > 0) {
+                    html += `
+                        <div class="card">
+                            <h4>💼 거래 내역</h4>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>시간</th>
+                                        <th>종목</th>
+                                        <th>유형</th>
+                                        <th>수량</th>
+                                        <th>가격</th>
+                                        <th>손익</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+
+                    report.trades.forEach(trade => {
+                        const isBuy = trade.order_type === 'buy';
+                        const pnl = trade.pnl || 0;
+                        html += `
+                            <tr>
+                                <td>${new Date(trade.timestamp).toLocaleString()}</td>
+                                <td>${trade.symbol}</td>
+                                <td><span class="badge ${isBuy ? 'badge-success' : 'badge-danger'}">${trade.order_type.toUpperCase()}</span></td>
+                                <td>${trade.quantity}</td>
+                                <td>$${trade.price.toFixed(2)}</td>
+                                <td class="${pnl >= 0 ? 'text-success' : 'text-danger'}">${pnl ? '$' + pnl.toFixed(2) : '-'}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('report-details').innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('report-details').innerHTML = '<p style="color:red;">레포트를 불러오는 중 오류가 발생했습니다.</p>';
+            });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         fetch('/api/reports/list')
             .then(response => response.json())
@@ -43,21 +194,24 @@
                     return;
                 }
 
-                // reports.sort((a, b) => new Date(b.date) - new Date(a.date));
-
                 reports.forEach(report => {
                     const row = tbody.insertRow();
                     const profit = report.profit || 0;
                     const return_pct = (report.return_pct || 0) * 100;
 
+                    row.style.cursor = 'pointer';
+                    row.onclick = function () {
+                        showReportDetails(report.date);
+                    };
+
                     row.innerHTML = `
-                        <td style="font-weight:600;">${report.date}</td>
-                        <td>${report.total_trades}회</td>
-                        <td>${(report.win_rate * 100).toFixed(1)}%</td>
-                        <td class="${profit >= 0 ? 'text-success' : 'text-danger'}">$${profit.toFixed(2)}</td>
-                        <td class="${return_pct >= 0 ? 'text-success' : 'text-danger'}">${return_pct.toFixed(2)}%</td>
-                        <td class="text-danger">-${(report.mdd * 100).toFixed(2)}%</td>
-                        <td>${report.sharpe_ratio.toFixed(2)}</td>
+                        <td data-label="날짜" style="font-weight:600;">${report.date}</td>
+                        <td data-label="총 거래수">${report.total_trades}회</td>
+                        <td data-label="승률">${(report.win_rate * 100).toFixed(1)}%</td>
+                        <td data-label="수익금" class="${profit >= 0 ? 'text-success' : 'text-danger'}">$${profit.toFixed(2)}</td>
+                        <td data-label="수익률" class="${return_pct >= 0 ? 'text-success' : 'text-danger'}">${return_pct.toFixed(2)}%</td>
+                        <td data-label="최대 낙폭" class="text-danger">-${(report.mdd * 100).toFixed(2)}%</td>
+                        <td data-label="샤프 지수">${report.sharpe_ratio.toFixed(2)}</td>
                     `;
                 });
             })

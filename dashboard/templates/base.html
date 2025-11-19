@@ -59,6 +59,37 @@
             gap: 10px;
         }
 
+        .mobile-menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .mobile-menu-toggle span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: white;
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+
+        .mobile-menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translateY(10px);
+        }
+
+        .mobile-menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .mobile-menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translateY(-10px);
+        }
+
         .logout-btn {
             background: rgba(255, 255, 255, 0.2);
             color: white;
@@ -142,6 +173,55 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: #f8f9fc;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            min-width: 150px;
+            flex: 1;
+        }
+
+        .filter-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-end;
         }
 
         /* Buttons */
@@ -305,6 +385,144 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+
+            .header-brand {
+                font-size: 1.2rem;
+            }
+
+            .mobile-menu-toggle {
+                display: flex;
+            }
+
+            .logout-btn {
+                display: none;
+            }
+
+            .navbar {
+                position: fixed;
+                top: 60px;
+                left: 0;
+                right: 0;
+                background: white;
+                box-shadow: var(--shadow-lg);
+                transform: translateY(-100%);
+                transition: transform 0.3s ease;
+                z-index: 999;
+                max-height: 0;
+                overflow: hidden;
+                margin-bottom: 0;
+            }
+
+            .navbar.active {
+                transform: translateY(0);
+                max-height: 500px;
+            }
+
+            .navbar ul {
+                flex-direction: column;
+                gap: 0;
+                padding: 1rem 0;
+            }
+
+            .navbar li {
+                width: 100%;
+            }
+
+            .navbar a {
+                padding: 1rem 2rem;
+                border-bottom: none;
+                border-left: 3px solid transparent;
+            }
+
+            .navbar a:hover,
+            .navbar a.active {
+                background: #f8f9fc;
+                border-left-color: #667eea;
+            }
+
+            .container {
+                padding: 0 1rem 2rem;
+            }
+
+            .card {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .card h3 {
+                font-size: 1.1rem;
+            }
+
+            /* Responsive tables - card layout */
+            .table-container {
+                overflow-x: auto;
+            }
+
+            .table thead {
+                display: none;
+            }
+
+            .table tbody tr {
+                display: block;
+                margin-bottom: 1rem;
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 1rem;
+                background: white;
+            }
+
+            .table tbody td {
+                display: block;
+                text-align: right;
+                padding: 0.5rem 0;
+                border: none;
+            }
+
+            .table tbody td::before {
+                content: attr(data-label);
+                float: left;
+                font-weight: 600;
+                color: #64748b;
+            }
+
+            /* Filter section responsive */
+            .filter-section {
+                padding: 0.75rem;
+            }
+
+            .filter-group {
+                min-width: 100%;
+            }
+
+            .filter-actions {
+                width: 100%;
+            }
+
+            .filter-actions .btn {
+                flex: 1;
+            }
+
+            .btn {
+                font-size: 0.85rem;
+                padding: 0.5rem 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-brand {
+                font-size: 1rem;
+            }
+
+            .card {
+                border-radius: 8px;
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -314,10 +532,15 @@
         <div class="header-brand">
             <span>🤖</span> AI 주식 트레이더
         </div>
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
         <a href="/logout" class="logout-btn">로그아웃</a>
     </header>
 
-    <nav class="navbar">
+    <nav class="navbar" id="navbar">
         <ul>
             <li><a href="/" class="{% if active_page == 'dashboard' %}active{% endif %}">📊 대시보드</a></li>
             <li><a href="/history" class="{% if active_page == 'history' %}active{% endif %}">📈 거래 이력</a></li>
@@ -333,7 +556,24 @@
     </main>
 
     <script>
-        // Common scripts can go here
+        // Mobile menu toggle
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const navbar = document.getElementById('navbar');
+
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', function () {
+                navbar.classList.toggle('active');
+                this.classList.toggle('active');
+            });
+
+            // Close menu when clicking a link
+            navbar.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function () {
+                    navbar.classList.remove('active');
+                    mobileMenuToggle.classList.remove('active');
+                });
+            });
+        }
     </script>
     {% block extra_js %}{% endblock %}
 </body>

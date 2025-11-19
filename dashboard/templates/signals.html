@@ -5,6 +5,39 @@
 {% block content %}
 <div class="card">
     <h3>🎯 AI 매매 신호 이력</h3>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="filter-group">
+            <label for="filter-date-from">시작 날짜</label>
+            <input type="date" id="filter-date-from">
+        </div>
+        <div class="filter-group">
+            <label for="filter-date-to">종료 날짜</label>
+            <input type="date" id="filter-date-to">
+        </div>
+        <div class="filter-group">
+            <label for="filter-symbol">종목</label>
+            <input type="text" id="filter-symbol" placeholder="예: AAPL">
+        </div>
+        <div class="filter-group">
+            <label for="filter-signal-type">신호 유형</label>
+            <select id="filter-signal-type">
+                <option value="all">전체</option>
+                <option value="buy">매수 신호</option>
+                <option value="sell">매도 신호</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="filter-confidence">최소 신뢰도 (%)</label>
+            <input type="number" id="filter-confidence" min="0" max="100" value="0" placeholder="0-100">
+        </div>
+        <div class="filter-actions">
+            <button class="btn btn-primary" onclick="applyFilters()">적용</button>
+            <button class="btn btn-warning" onclick="resetFilters()">초기화</button>
+        </div>
+    </div>
+
     <div class="table-container">
         <table class="table" id="signals-table">
             <thead>
@@ -31,50 +64,89 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    let allSignals = [];
+
+    function loadSignals() {
         fetch('/api/signals')
             .then(response => response.json())
             .then(data => {
-                const signals = data.signals || data;
-                const tbody = document.querySelector('#signals-table tbody');
-                tbody.innerHTML = '';
-
-                if (!signals || signals.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem; color:#999;">생성된 신호가 없습니다.</td></tr>';
-                    return;
-                }
-
-                // signals.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-                signals.forEach(signal => {
-                    const row = tbody.insertRow();
-                    const isBuy = signal.signal === 'buy';
-                    const confidence = (signal.confidence * 100).toFixed(1);
-
-                    row.innerHTML = `
-                        <td style="color:#64748b;">${new Date(signal.timestamp).toLocaleString()}</td>
-                        <td style="font-weight:600;">${signal.symbol}</td>
-                        <td><span class="badge ${isBuy ? 'badge-success' : 'badge-danger'}">${signal.signal.toUpperCase()}</span></td>
-                        <td>
-                            <div style="display:flex; align-items:center; gap:5px;">
-                                <div style="width:50px; height:4px; background:#e2e8f0; border-radius:2px;">
-                                    <div style="width:${confidence}%; height:100%; background:${isBuy ? '#27ae60' : '#e74c3c'}; border-radius:2px;"></div>
-                                </div>
-                                <span style="font-size:0.85rem;">${confidence}%</span>
-                            </div>
-                        </td>
-                        <td>$${signal.current_price.toFixed(2)}</td>
-                        <td>$${signal.target_price ? signal.target_price.toFixed(2) : '-'}</td>
-                        <td>$${signal.stop_loss ? signal.stop_loss.toFixed(2) : '-'}</td>
-                        <td style="max-width:300px; font-size:0.9rem; color:#475569;">${signal.reason}</td>
-                    `;
-                });
+                allSignals = data.signals || data;
+                displaySignals(allSignals);
             })
             .catch(error => {
                 console.error('Error:', error);
                 document.querySelector('#signals-table tbody').innerHTML =
                     '<tr><td colspan="8" style="text-align:center; color:red;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
             });
+    }
+
+    function displaySignals(signals) {
+        const tbody = document.querySelector('#signals-table tbody');
+        tbody.innerHTML = '';
+
+        if (!signals || signals.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem; color:#999;">생성된 신호가 없습니다.</td></tr>';
+            return;
+        }
+
+        signals.forEach(signal => {
+            const row = tbody.insertRow();
+            const isBuy = signal.signal === 'buy';
+            const confidence = (signal.confidence * 100).toFixed(1);
+
+            row.innerHTML = `
+                <td data-label="시간" style="color:#64748b;">${new Date(signal.timestamp).toLocaleString()}</td>
+                <td data-label="종목" style="font-weight:600;">${signal.symbol}</td>
+                <td data-label="신호"><span class="badge ${isBuy ? 'badge-success' : 'badge-danger'}">${signal.signal.toUpperCase()}</span></td>
+                <td data-label="신뢰도">
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <div style="width:50px; height:4px; background:#e2e8f0; border-radius:2px;">
+                            <div style="width:${confidence}%; height:100%; background:${isBuy ? '#27ae60' : '#e74c3c'}; border-radius:2px;"></div>
+                        </div>
+                        <span style="font-size:0.85rem;">${confidence}%</span>
+                    </div>
+                </td>
+                <td data-label="현재가">$${signal.current_price.toFixed(2)}</td>
+                <td data-label="목표가">$${signal.target_price ? signal.target_price.toFixed(2) : '-'}</td>
+                <td data-label="손절가">$${signal.stop_loss ? signal.stop_loss.toFixed(2) : '-'}</td>
+                <td data-label="이유" style="max-width:300px; font-size:0.9rem; color:#475569;">${signal.reason}</td>
+            `;
+        });
+    }
+
+    function applyFilters() {
+        const dateFrom = document.getElementById('filter-date-from').value;
+        const dateTo = document.getElementById('filter-date-to').value;
+        const symbol = document.getElementById('filter-symbol').value.toUpperCase();
+        const signalType = document.getElementById('filter-signal-type').value;
+        const minConfidence = parseFloat(document.getElementById('filter-confidence').value) / 100;
+
+        let filtered = allSignals.filter(signal => {
+            const signalDate = new Date(signal.timestamp).toISOString().split('T')[0];
+
+            if (dateFrom && signalDate < dateFrom) return false;
+            if (dateTo && signalDate > dateTo) return false;
+            if (symbol && !signal.symbol.toUpperCase().includes(symbol)) return false;
+            if (signalType !== 'all' && signal.signal !== signalType) return false;
+            if (signal.confidence < minConfidence) return false;
+
+            return true;
+        });
+
+        displaySignals(filtered);
+    }
+
+    function resetFilters() {
+        document.getElementById('filter-date-from').value = '';
+        document.getElementById('filter-date-to').value = '';
+        document.getElementById('filter-symbol').value = '';
+        document.getElementById('filter-signal-type').value = 'all';
+        document.getElementById('filter-confidence').value = '0';
+        displaySignals(allSignals);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadSignals();
     });
 </script>
 {% endblock %}

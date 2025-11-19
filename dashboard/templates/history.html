@@ -5,6 +5,35 @@
 {% block content %}
 <div class="card">
     <h3>📈 전체 거래 이력</h3>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="filter-group">
+            <label for="filter-date-from">시작 날짜</label>
+            <input type="date" id="filter-date-from">
+        </div>
+        <div class="filter-group">
+            <label for="filter-date-to">종료 날짜</label>
+            <input type="date" id="filter-date-to">
+        </div>
+        <div class="filter-group">
+            <label for="filter-symbol">종목</label>
+            <input type="text" id="filter-symbol" placeholder="예: AAPL">
+        </div>
+        <div class="filter-group">
+            <label for="filter-order-type">주문 유형</label>
+            <select id="filter-order-type">
+                <option value="all">전체</option>
+                <option value="buy">매수</option>
+                <option value="sell">매도</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button class="btn btn-primary" onclick="applyFilters()">적용</button>
+            <button class="btn btn-warning" onclick="resetFilters()">초기화</button>
+        </div>
+    </div>
+
     <div class="table-container">
         <table class="table" id="history-table">
             <thead>
@@ -19,7 +48,6 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- 데이터가 여기에 로드됩니다 -->
                 <tr>
                     <td colspan="7" style="text-align:center; padding: 2rem; color:#999;">데이터 로딩 중...</td>
                 </tr>
@@ -31,43 +59,79 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    let allTrades = [];
+
+    function loadTrades() {
         fetch('/api/trades')
             .then(response => response.json())
             .then(data => {
-                const trades = data.trades || data;
-                const tbody = document.querySelector('#history-table tbody');
-                tbody.innerHTML = '';
-
-                if (!trades || trades.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem; color:#999;">거래 내역이 없습니다.</td></tr>';
-                    return;
-                }
-
-                // trades.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-                trades.forEach(trade => {
-                    const row = tbody.insertRow();
-                    const total = trade.price * trade.quantity;
-                    const pnl = trade.pnl || 0;
-                    const isBuy = trade.order_type === 'buy';
-
-                    row.innerHTML = `
-                        <td style="color:#64748b;">${new Date(trade.timestamp).toLocaleString()}</td>
-                        <td style="font-weight:600;">${trade.symbol}</td>
-                        <td><span class="badge ${isBuy ? 'badge-success' : 'badge-danger'}">${trade.order_type.toUpperCase()}</span></td>
-                        <td>${trade.quantity}</td>
-                        <td>$${trade.price.toFixed(2)}</td>
-                        <td>$${total.toFixed(2)}</td>
-                        <td class="${pnl >= 0 ? 'text-success' : 'text-danger'}">${pnl ? '$' + pnl.toFixed(2) : '-'}</td>
-                    `;
-                });
+                allTrades = data.trades || data;
+                displayTrades(allTrades);
             })
             .catch(error => {
                 console.error('Error:', error);
                 document.querySelector('#history-table tbody').innerHTML =
                     '<tr><td colspan="7" style="text-align:center; color:red;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
             });
+    }
+
+    function displayTrades(trades) {
+        const tbody = document.querySelector('#history-table tbody');
+        tbody.innerHTML = '';
+
+        if (!trades || trades.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem; color:#999;">거래 내역이 없습니다.</td></tr>';
+            return;
+        }
+
+        trades.forEach(trade => {
+            const row = tbody.insertRow();
+            const total = trade.price * trade.quantity;
+            const pnl = trade.pnl || 0;
+            const isBuy = trade.order_type === 'buy';
+
+            row.innerHTML = `
+                <td data-label="시간" style="color:#64748b;">${new Date(trade.timestamp).toLocaleString()}</td>
+                <td data-label="종목" style="font-weight:600;">${trade.symbol}</td>
+                <td data-label="유형"><span class="badge ${isBuy ? 'badge-success' : 'badge-danger'}">${trade.order_type.toUpperCase()}</span></td>
+                <td data-label="수량">${trade.quantity}</td>
+                <td data-label="가격">$${trade.price.toFixed(2)}</td>
+                <td data-label="총액">$${total.toFixed(2)}</td>
+                <td data-label="손익" class="${pnl >= 0 ? 'text-success' : 'text-danger'}">${pnl ? '$' + pnl.toFixed(2) : '-'}</td>
+            `;
+        });
+    }
+
+    function applyFilters() {
+        const dateFrom = document.getElementById('filter-date-from').value;
+        const dateTo = document.getElementById('filter-date-to').value;
+        const symbol = document.getElementById('filter-symbol').value.toUpperCase();
+        const orderType = document.getElementById('filter-order-type').value;
+
+        let filtered = allTrades.filter(trade => {
+            const tradeDate = new Date(trade.timestamp).toISOString().split('T')[0];
+
+            if (dateFrom && tradeDate < dateFrom) return false;
+            if (dateTo && tradeDate > dateTo) return false;
+            if (symbol && !trade.symbol.toUpperCase().includes(symbol)) return false;
+            if (orderType !== 'all' && trade.order_type !== orderType) return false;
+
+            return true;
+        });
+
+        displayTrades(filtered);
+    }
+
+    function resetFilters() {
+        document.getElementById('filter-date-from').value = '';
+        document.getElementById('filter-date-to').value = '';
+        document.getElementById('filter-symbol').value = '';
+        document.getElementById('filter-order-type').value = 'all';
+        displayTrades(allTrades);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadTrades();
     });
 </script>
 {% endblock %}
