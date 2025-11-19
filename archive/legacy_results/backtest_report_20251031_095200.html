@@ -1,0 +1,402 @@
+
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>AI 주식 트레이더 백테스팅 보고서</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .section { margin-bottom: 30px; }
+                .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+                .metric-card { background: #f5f5f5; padding: 15px; border-radius: 5px; text-align: center; }
+                .metric-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+                .metric-label { font-size: 14px; color: #7f8c8d; margin-top: 5px; }
+                .positive { color: #27ae60; }
+                .negative { color: #e74c3c; }
+                table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+                th { background-color: #f2f2f2; }
+                .chart-container { margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>AI 주식 트레이더 백테스팅 보고서</h1>
+                <p>전략: 저점매수-고점매도 | 기간: 2023-01-01 ~ 2024-12-31</p>
+                <p>종목: AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA, LLY, V, IONQ</p>
+            </div>
+            
+            <div class="section">
+                <h2>1. 전략 개요</h2>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">$10,000.00</div>
+                        <div class="metric-label">초기 자본</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">$16,860.96</div>
+                        <div class="metric-label">최종 자산</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value positive">68.61%</div>
+                        <div class="metric-label">총 수익률</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">30.05%</div>
+                        <div class="metric-label">연환산 수익률</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>2. 수익성 지표</h2>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">492</div>
+                        <div class="metric-label">총 거래 횟수</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">24.39%</div>
+                        <div class="metric-label">승률</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">$77.19</div>
+                        <div class="metric-label">평균 수익</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">$-58.38</div>
+                        <div class="metric-label">평균 손실</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">4.07</div>
+                        <div class="metric-label">수익 팩터</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>3. 리스크 지표</h2>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">11.23%</div>
+                        <div class="metric-label">변동성</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">2.4</div>
+                        <div class="metric-label">샤프 비율</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">0.22</div>
+                        <div class="metric-label">소르티노 비율</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value negative">-6.98%</div>
+                        <div class="metric-label">최대 낙폭</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">40</div>
+                        <div class="metric-label">최대 낙폭 기간 (일)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>4. 거래 내역</h2>
+                <table><tr><th>날짜</th><th>종목</th><th>거래</th><th>수량</th><th>가격</th><th>손익</th></tr>
+            <tr>
+                <td>2024-11-26</td>
+                <td>MSFT</td>
+                <td>BUY</td>
+                <td>1</td>
+                <td>$425.65</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-02</td>
+                <td>META</td>
+                <td>BUY</td>
+                <td>1</td>
+                <td>$590.97</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-03</td>
+                <td>AMZN</td>
+                <td>BUY</td>
+                <td>3</td>
+                <td>$213.44</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-03</td>
+                <td>META</td>
+                <td>SELL</td>
+                <td>5</td>
+                <td>$611.73</td>
+                <td class="positive">$152.44</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-04</td>
+                <td>MSFT</td>
+                <td>SELL</td>
+                <td>1</td>
+                <td>$435.03</td>
+                <td class="positive">$9.38</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-04</td>
+                <td>AMZN</td>
+                <td>SELL</td>
+                <td>6</td>
+                <td>$218.16</td>
+                <td class="positive">$60.81</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-09</td>
+                <td>GOOGL</td>
+                <td>BUY</td>
+                <td>5</td>
+                <td>$174.80</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-10</td>
+                <td>GOOGL</td>
+                <td>SELL</td>
+                <td>5</td>
+                <td>$184.57</td>
+                <td class="positive">$48.84</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-17</td>
+                <td>V</td>
+                <td>SELL</td>
+                <td>1</td>
+                <td>$316.68</td>
+                <td class="positive">$5.08</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-18</td>
+                <td>TSLA</td>
+                <td>BUY</td>
+                <td>2</td>
+                <td>$440.13</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-18</td>
+                <td>LLY</td>
+                <td>SELL</td>
+                <td>6</td>
+                <td>$760.16</td>
+                <td class="negative">$-208.97</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-20</td>
+                <td>AAPL</td>
+                <td>BUY</td>
+                <td>5</td>
+                <td>$253.59</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-20</td>
+                <td>GOOGL</td>
+                <td>BUY</td>
+                <td>6</td>
+                <td>$190.79</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-20</td>
+                <td>AMZN</td>
+                <td>BUY</td>
+                <td>5</td>
+                <td>$224.92</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-20</td>
+                <td>V</td>
+                <td>BUY</td>
+                <td>3</td>
+                <td>$316.09</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-23</td>
+                <td>TSLA</td>
+                <td>SELL</td>
+                <td>2</td>
+                <td>$430.60</td>
+                <td class="negative">$-19.06</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-24</td>
+                <td>NVDA</td>
+                <td>BUY</td>
+                <td>7</td>
+                <td>$140.19</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-24</td>
+                <td>V</td>
+                <td>SELL</td>
+                <td>3</td>
+                <td>$319.02</td>
+                <td class="positive">$8.78</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-26</td>
+                <td>V</td>
+                <td>BUY</td>
+                <td>3</td>
+                <td>$319.28</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>2024-12-30</td>
+                <td>AAPL</td>
+                <td>SELL</td>
+                <td>5</td>
+                <td>$251.31</td>
+                <td class="negative">$-11.41</td>
+            </tr>
+            </table>
+            </div>
+            
+            <div class="section">
+                <h2>5. 종목별 성과</h2>
+                <table><tr><th>종목</th><th>총 수익률</th><th>거래 횟수</th><th>총 손익</th></tr>
+            <tr>
+                <td>AAPL</td>
+                <td class="positive">103.77%</td>
+                <td>68</td>
+                <td class="positive">$317.76</td>
+            </tr>
+            
+            <tr>
+                <td>MSFT</td>
+                <td class="positive">80.23%</td>
+                <td>56</td>
+                <td class="positive">$289.27</td>
+            </tr>
+            
+            <tr>
+                <td>GOOGL</td>
+                <td class="positive">115.36%</td>
+                <td>46</td>
+                <td class="positive">$764.41</td>
+            </tr>
+            
+            <tr>
+                <td>AMZN</td>
+                <td class="positive">157.87%</td>
+                <td>47</td>
+                <td class="positive">$828.70</td>
+            </tr>
+            
+            <tr>
+                <td>NVDA</td>
+                <td class="positive">861.16%</td>
+                <td>40</td>
+                <td class="positive">$1183.43</td>
+            </tr>
+            
+            <tr>
+                <td>META</td>
+                <td class="positive">375.79%</td>
+                <td>39</td>
+                <td class="positive">$842.90</td>
+            </tr>
+            
+            <tr>
+                <td>TSLA</td>
+                <td class="positive">286.13%</td>
+                <td>43</td>
+                <td class="positive">$903.67</td>
+            </tr>
+            
+            <tr>
+                <td>LLY</td>
+                <td class="positive">115.51%</td>
+                <td>39</td>
+                <td class="positive">$448.95</td>
+            </tr>
+            
+            <tr>
+                <td>V</td>
+                <td class="positive">54.42%</td>
+                <td>65</td>
+                <td class="positive">$255.82</td>
+            </tr>
+            
+            <tr>
+                <td>IONQ</td>
+                <td class="positive">1180.06%</td>
+                <td>49</td>
+                <td class="positive">$1151.22</td>
+            </tr>
+            </table>
+            </div>
+            
+            <div class="section">
+                <h2>6. 벤치마크 비교</h2>
+                
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-value">54.46%</div>
+                <div class="metric-label">S&P 500 수익률</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">12.86%</div>
+                <div class="metric-label">S&P 500 변동성</div>
+            </div>
+        </div>
+        
+            </div>
+            
+            <div class="section">
+                <h2>7. 실전 적용 권고사항</h2>
+                <div style="background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
+                    <h3>권장사항:</h3>
+                    <ul>
+                        <li>승률이 24.39%로 개선 필요합니다</li>
+                        <li>샤프 비율이 2.4로 우수합니다</li>
+                        <li>최대 낙폭이 -6.98%로 주의 필요합니다</li>
+                        <li>수익률이 양호하여 실전 적용을 고려할 수 있습니다</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="section">
+                <p style="text-align: center; color: #7f8c8d; font-size: 12px;">
+                    보고서 생성 시간: 2025-10-31 09:52:00<br>
+                    AI 주식 트레이더 v1.0
+                </p>
+            </div>
+        </body>
+        </html>
+        

@@ -1,0 +1,131 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>암호화폐 백테스트 결과 리포트</title>
+        <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; background: #f5f7fa; }
+            .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+            h2 { color: #34495e; margin-top: 30px; border-left: 4px solid #3498db; padding-left: 15px; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th { background: #3498db; color: white; padding: 12px; text-align: left; }
+            td { padding: 12px; border-bottom: 1px solid #ecf0f1; }
+            tr:hover { background: #f8f9fa; }
+            .metric { display: inline-block; margin: 15px; padding: 20px; background: #ecf0f1; border-radius: 8px; min-width: 200px; }
+            .metric-label { font-size: 14px; color: #7f8c8d; }
+            .metric-value { font-size: 28px; font-weight: bold; color: #2c3e50; margin-top: 5px; }
+            .positive { color: #27ae60; }
+            .negative { color: #e74c3c; }
+            .warning { background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 20px 0; border-radius: 4px; }
+            .info { background: #d1ecf1; padding: 15px; border-left: 4px solid #17a2b8; margin: 20px 0; border-radius: 4px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 암호화폐 백테스트 결과 리포트</h1>
+            <p><strong>기간:</strong> 2023-01-01 ~ 2025-06-30 (2.5년)</p>
+            <p><strong>대상:</strong> BTC, ETH, BNB, SOL, XRP, ADA, AVAX, DOT, MATIC, LINK (10개 코인)</p>
+            
+            <h2>📊 핵심 성과 지표</h2>
+            <div style="text-align: center;">
+    
+            <div class="metric">
+                <div class="metric-label">초기자본</div>
+                <div class="metric-value">10000</div>
+            </div>
+        
+            <div class="metric">
+                <div class="metric-label">최종자산</div>
+                <div class="metric-value">11351.47503477335</div>
+            </div>
+        
+            <div class="metric">
+                <div class="metric-label">총수익률</div>
+                <div class="metric-value">13.51%</div>
+            </div>
+        
+            <div class="metric">
+                <div class="metric-label">연환산수익률</div>
+                <div class="metric-value">5.21%</div>
+            </div>
+        
+            <div class="metric">
+                <div class="metric-label">샤프비율</div>
+                <div class="metric-value">0.39</div>
+            </div>
+        
+            <div class="metric">
+                <div class="metric-label">최대낙폭</div>
+                <div class="metric-value">-19.38%</div>
+            </div>
+        
+            <div class="metric">
+                <div class="metric-label">총거래횟수</div>
+                <div class="metric-value">297</div>
+            </div>
+        
+            <div class="metric">
+                <div class="metric-label">승률</div>
+                <div class="metric-value">47.62%</div>
+            </div>
+        
+            </div>
+            
+            <div class="warning">
+                <strong>⚠️ 전략 개선 필요</strong><br>
+                현재 결과가 예상보다 낮습니다 (3.98% 수익, 4회 거래). 
+                전략의 매수 신호 조건이 너무 엄격하여 거래 기회를 놓치고 있습니다.
+                <br><br>
+                <strong>개선 방안:</strong>
+                <ul>
+                    <li>신호 강도 임계값 낮추기 (현재: 4.0 → 제안: 3.0)</li>
+                    <li>RSI 임계값 완화 (현재: 30/70 → 제안: 35/65)</li>
+                    <li>거래량 조건 완화</li>
+                </ul>
+            </div>
+    
+            <h2>📈 주식 전략과 비교</h2>
+            <table>
+                <tr>
+                    <th>구분</th>
+                    <th>주식 전략</th>
+                    <th>암호화폐 전략</th>
+                    <th>차이</th>
+                </tr>
+                <tr>
+                    <td>최종 자산</td>
+                    <td>$39,666.68</td>
+                    <td>11351.47503477335</td>
+                    <td class="negative">
+                        $-28,315.20
+                    </td>
+                </tr>
+                <tr>
+                    <td>수익률</td>
+                    <td>296.67%</td>
+                    <td>13.51%</td>
+                    <td class="negative">
+                        -283.16%
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="info">
+                <strong>💡 결론</strong><br>
+                현재 암호화폐 전략은 주식 전략보다 낮은 성과를 보이고 있습니다.
+                전략 파라미터를 조정하여 재테스트가 필요합니다.
+            </div>
+        
+            <h2>📁 생성된 파일</h2>
+            <ul>
+                <li><a href="portfolio_comparison.html">포트폴리오 비교 차트</a></li>
+                <li><a href="returns_comparison.html">수익률 비교 차트</a></li>
+                <li><a href="trades_timeline.html">거래 시점 분석</a></li>
+                <li><a href="coin_performance.html">코인별 성과</a></li>
+            </ul>
+        </div>
+    </body>
+    </html>
+    

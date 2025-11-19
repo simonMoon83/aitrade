@@ -1,0 +1,82 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# 환경 변수 (중요!)
+.env
+.env.local
+.env.production
+
+# 데이터 파일
+data/*.csv
+data/*.pickle
+data/*.pkl
+*.db
+*.sqlite
+
+# 모델 파일
+models/*.joblib
+models/*.pkl
+models/*.h5
+models/*.pt
+
+# 로그 파일
+logs/*.log
+*.log
+
+# 리포트
+reports/*.html
+reports/*.pdf
+reports/*.png
+
+# 백업
+backups/
+*.tar.gz
+*.zip
+
+# 결과 파일
+results/*.csv
+results/*.json
+
+# 임시 파일
+*.tmp
+*.temp
+tmp/
+temp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# 테스트
+test_*.py
+*_test.py
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 배포 관련 (선택적)
+# deploy/
+# scripts/
+
+# 문서 (선택적으로 포함)
+# *.md

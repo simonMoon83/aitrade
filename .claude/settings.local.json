@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(test:*)",
+      "Bash(pip show:*)",
+      "Bash(python main.py:*)",
+      "Bash(start \"\" \"C:\\Project\\aitrader\\reports\\backtest_report_20251031_091842.html\")",
+      "Bash(python test_strategy.py:*)",
+      "Bash(python test_backtest.py:*)",
+      "Bash(findstr:*)",
+      "Bash(find:*)",
+      "Bash(awk:*)",
+      "Bash(chmod:*)",
+      "Read(//c/Users/dw/Desktop/오라클클라우드/darkhorsetip/**)",
+      "Bash(nul)",
+      "Bash(dir:*)",
+      "Bash(powershell -Command \"(Get-Content logs/paper_trader_20251111.log | Select-Object -Last 50)\")",
+      "Bash(powershell -Command:*)",
+      "Bash(mv:*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

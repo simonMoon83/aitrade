@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # Paper Trading 서비스
+  aitrader-paper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aitrader-paper
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+      - ./models:/app/models
+    command: python main.py --mode paper --symbols AAPL,MSFT,GOOGL,AMZN,NVDA,META,TSLA --daemon
+    networks:
+      - aitrader-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # 대시보드 서비스
+  aitrader-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aitrader-dashboard
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+      - ./models:/app/models
+    command: python simple_dashboard.py
+    depends_on:
+      - aitrader-paper
+    networks:
+      - aitrader-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx 웹서버 (리버스 프록시 + SSL)
+  webserver:
+    image: nginx:1.25-alpine
+    container_name: aitrader-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./reports:/var/www/html/reports:ro  # 보고서 정적 파일 서빙
+    depends_on:
+      - aitrader-dashboard
+    networks:
+      - aitrader-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  aitrader-network:
+    driver: bridge

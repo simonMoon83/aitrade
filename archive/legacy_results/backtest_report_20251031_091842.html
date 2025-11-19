@@ -1,0 +1,222 @@
+
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>AI 주식 트레이더 백테스팅 보고서</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .section { margin-bottom: 30px; }
+                .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+                .metric-card { background: #f5f5f5; padding: 15px; border-radius: 5px; text-align: center; }
+                .metric-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+                .metric-label { font-size: 14px; color: #7f8c8d; margin-top: 5px; }
+                .positive { color: #27ae60; }
+                .negative { color: #e74c3c; }
+                table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+                th { background-color: #f2f2f2; }
+                .chart-container { margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>AI 주식 트레이더 백테스팅 보고서</h1>
+                <p>전략: 저점매수-고점매도 | 기간: 2023-01-01 ~ 2024-12-31</p>
+                <p>종목: AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA, LLY, V, IONQ</p>
+            </div>
+            
+            <div class="section">
+                <h2>1. 전략 개요</h2>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">$0.00</div>
+                        <div class="metric-label">초기 자본</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">$0.00</div>
+                        <div class="metric-label">최종 자산</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value negative">0.00%</div>
+                        <div class="metric-label">총 수익률</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">0.00%</div>
+                        <div class="metric-label">연환산 수익률</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>2. 수익성 지표</h2>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">0</div>
+                        <div class="metric-label">총 거래 횟수</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">0.00%</div>
+                        <div class="metric-label">승률</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">$0.00</div>
+                        <div class="metric-label">평균 수익</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">$0.00</div>
+                        <div class="metric-label">평균 손실</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">0</div>
+                        <div class="metric-label">수익 팩터</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>3. 리스크 지표</h2>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">0.00%</div>
+                        <div class="metric-label">변동성</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">0</div>
+                        <div class="metric-label">샤프 비율</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">0</div>
+                        <div class="metric-label">소르티노 비율</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value negative">0.00%</div>
+                        <div class="metric-label">최대 낙폭</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">0</div>
+                        <div class="metric-label">최대 낙폭 기간 (일)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>4. 거래 내역</h2>
+                <p>거래 내역이 없습니다.</p>
+            </div>
+            
+            <div class="section">
+                <h2>5. 종목별 성과</h2>
+                <table><tr><th>종목</th><th>총 수익률</th><th>거래 횟수</th><th>총 손익</th></tr>
+            <tr>
+                <td>AAPL</td>
+                <td class="positive">103.77%</td>
+                <td>0</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>MSFT</td>
+                <td class="positive">80.23%</td>
+                <td>0</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>GOOGL</td>
+                <td class="positive">115.36%</td>
+                <td>0</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>AMZN</td>
+                <td class="positive">157.87%</td>
+                <td>0</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>NVDA</td>
+                <td class="positive">861.16%</td>
+                <td>0</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>META</td>
+                <td class="positive">375.79%</td>
+                <td>0</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>TSLA</td>
+                <td class="positive">286.13%</td>
+                <td>0</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>LLY</td>
+                <td class="positive">115.51%</td>
+                <td>0</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>V</td>
+                <td class="positive">54.42%</td>
+                <td>0</td>
+                <td class="">$0.00</td>
+            </tr>
+            
+            <tr>
+                <td>IONQ</td>
+                <td class="positive">1180.06%</td>
+                <td>0</td>
+                <td class="">$0.00</td>
+            </tr>
+            </table>
+            </div>
+            
+            <div class="section">
+                <h2>6. 벤치마크 비교</h2>
+                
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-value">54.46%</div>
+                <div class="metric-label">S&P 500 수익률</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">12.86%</div>
+                <div class="metric-label">S&P 500 변동성</div>
+            </div>
+        </div>
+        
+            </div>
+            
+            <div class="section">
+                <h2>7. 실전 적용 권고사항</h2>
+                <div style="background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
+                    <h3>권장사항:</h3>
+                    <ul>
+                        <li>승률이 0.00%로 개선 필요합니다</li>
+                        <li>샤프 비율이 0로 보통합니다</li>
+                        <li>최대 낙폭이 0.00%로 주의 필요합니다</li>
+                        <li>추가 전략 개선이 필요합니다</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="section">
+                <p style="text-align: center; color: #7f8c8d; font-size: 12px;">
+                    보고서 생성 시간: 2025-10-31 09:18:42<br>
+                    AI 주식 트레이더 v1.0
+                </p>
+            </div>
+        </body>
+        </html>
+        
