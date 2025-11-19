@@ -43,11 +43,17 @@
 
 {% block content %}
 <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap: wrap; gap: 1rem;">
         <h3>📝 시스템 로그</h3>
-        <div style="display:flex; gap:10px;">
-            <button class="btn btn-primary" onclick="refreshLogs()">🔄 새로고침</button>
-            <button class="btn btn-danger" onclick="clearLogs()">🗑️ 로그 지우기</button>
+        <div class="btn-group">
+            <button class="btn btn-info" onclick="refreshLogs()">
+                <span>🔄</span>
+                <span>새로고침</span>
+            </button>
+            <button class="btn btn-danger" onclick="clearLogs()">
+                <span>🗑️</span>
+                <span>로그 지우기</span>
+            </button>
         </div>
     </div>
 

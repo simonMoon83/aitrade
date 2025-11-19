@@ -237,6 +237,8 @@
             transition: all 0.2s;
             gap: 0.5rem;
             font-size: 0.95rem;
+            white-space: nowrap;
+            text-decoration: none;
         }
 
         .btn:hover {
@@ -291,6 +293,25 @@
 
         .btn-info:hover {
             background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
         }
 
         /* Tables */
@@ -386,8 +407,28 @@
             background: #94a3b8;
         }
 
+        /* Button Groups */
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
         /* Mobile Responsive Styles */
         @media (max-width: 768px) {
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            .btn-group {
+                width: 100%;
+            }
+
+            .btn-group .btn {
+                flex: 1;
+                min-width: 0;
+            }
             .header {
                 padding: 1rem;
             }

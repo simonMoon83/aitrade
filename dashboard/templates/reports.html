@@ -55,10 +55,11 @@
 
 {% block content %}
 <div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
         <h3>📋 일일 성과 레포트</h3>
         <button class="btn btn-primary" onclick="generateReport()" id="generate-btn">
-            ✨ 새 레포트 생성
+            <span>✨</span>
+            <span>새 레포트 생성</span>
         </button>
     </div>
     <div class="table-container">

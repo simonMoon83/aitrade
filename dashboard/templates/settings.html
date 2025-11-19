@@ -264,7 +264,10 @@
     <div class="search-box">
         <input type="text" id="symbol-search" class="search-input" placeholder="종목 코드 입력 (예: AAPL, TSLA)"
             onkeypress="handleEnter(event)">
-        <button class="btn btn-primary" onclick="addSymbolFromSearch()">추가</button>
+        <button class="btn btn-primary" onclick="addSymbolFromSearch()">
+            <span>➕</span>
+            <span>추가</span>
+        </button>
     </div>
 
     <div id="my-symbols" class="symbol-grid">
