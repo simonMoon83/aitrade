@@ -1,0 +1,11 @@
+{
+  "portfolio_value": 100000.0,
+  "cash": 100000.0,
+  "total_return": 9.0,
+  "daily_return": 0,
+  "positions": {},
+  "daily_trades": 0,
+  "is_running": true,
+  "market_session_active": true,
+  "last_updated": "2025-11-19T23:21:52.054196"
+}
