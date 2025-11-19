@@ -12,10 +12,12 @@ import os
 from datetime import datetime, timedelta
 from typing import Dict, Optional, List
 import pandas as pd
+import yfinance as yf
 
 import config
 from config import *
 from utils.logger import setup_logger
+from utils.settings_manager import settings_manager
 
 # pytz import (설치되지 않은 경우 대비)
 try:
@@ -121,6 +123,12 @@ def reports_page():
     """일일 레포트 페이지"""
     return render_template('reports.html')
 
+@app.route('/settings')
+@login_required
+def settings_page():
+    """설정 페이지"""
+    return render_template('settings.html')
+
 @app.route('/api/portfolio')
 @login_required
 def get_portfolio():
@@ -161,7 +169,7 @@ def get_trades():
                 if end_date:
                     trade_history = trade_history[trade_history['timestamp'] <= end_date]
                 
-                # 정렬 (최신순)
+                # 정렬 (최신순 - 시간 역순)
                 trade_history = trade_history.sort_values('timestamp', ascending=False)
                 
                 # 페이지네이션
@@ -198,6 +206,9 @@ def get_signals():
         # 로그에서 실시간 신호 로드
         signals = load_signals_from_logs()
         
+        # 시간 역순 정렬 (최신순)
+        signals.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        
         # 신호 통계 계산
         buy_signals = len([s for s in signals if 'BUY' in s.get('message', '').upper()])
         sell_signals = len([s for s in signals if 'SELL' in s.get('message', '').upper()])
@@ -227,6 +238,9 @@ def get_signals_history():
         
         # 로그에서 신호 데이터 로드
         signals = load_signals_from_logs()
+        
+        # 시간 역순 정렬 (최신순)
+        signals.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
         
         # 필터링
         if symbol:
@@ -709,6 +723,112 @@ def get_strategy_parameters():
         return jsonify(parameters)
     except Exception as e:
         logger.error(f"파라미터 조회 오류: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/settings', methods=['GET', 'POST'])
+@login_required
+def handle_settings():
+    """설정 조회 및 저장 API"""
+    try:
+        if request.method == 'GET':
+            return jsonify(settings_manager.get_settings())
+            
+        elif request.method == 'POST':
+            new_settings = request.json
+            settings_manager.save_settings(new_settings)
+            
+            # 트레이더에게 설정 변경 알림 (선택사항 - 현재는 폴링 방식 사용)
+            logger.info(f"설정 변경됨: {new_settings}")
+            
+            return jsonify({'status': 'success', 'message': '설정이 저장되었습니다'})
+            
+    except Exception as e:
+        logger.error(f"설정 API 오류: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/market/quotes', methods=['POST'])
+@login_required
+def get_market_quotes():
+    """실시간(지연) 시세 조회 API"""
+    try:
+        data = request.json
+        symbols = data.get('symbols', [])
+        
+        if not symbols:
+            return jsonify({})
+            
+        # 대문자 변환 및 중복 제거
+        symbols = list(set([s.upper() for s in symbols]))
+        
+        # yfinance로 데이터 조회 (최근 5일치 - 전일 대비 계산용)
+        # progress=False로 로그 출력 억제
+        try:
+            df = yf.download(symbols, period="5d", progress=False)
+        except Exception as e:
+            logger.error(f"yfinance download error: {e}")
+            return jsonify({})
+        
+        quotes = {}
+        
+        # 데이터가 없는 경우 빈 딕셔너리 반환
+        if df.empty:
+            return jsonify({})
+
+        # 단일 종목인 경우 DataFrame 구조가 다름 (MultiIndex가 아님)
+        if len(symbols) == 1:
+            symbol = symbols[0]
+            try:
+                # 'Close' 컬럼이 있는지 확인
+                if 'Close' in df.columns:
+                    close_series = df['Close']
+                else:
+                    # 컬럼이 바로 Close일 수도 있음 (구조에 따라 다름)
+                    close_series = df
+                
+                if not close_series.empty:
+                    current_price = float(close_series.iloc[-1])
+                    prev_close = float(close_series.iloc[-2]) if len(close_series) >= 2 else current_price
+                    
+                    change = current_price - prev_close
+                    change_percent = (change / prev_close) * 100 if prev_close != 0 else 0
+                    
+                    quotes[symbol] = {
+                        'price': round(current_price, 2),
+                        'change': round(change, 2),
+                        'change_percent': round(change_percent, 2)
+                    }
+            except Exception as e:
+                logger.error(f"Error parsing quote for {symbol}: {e}")
+        else:
+            # 다중 종목 (MultiIndex: (Price, Symbol))
+            # yfinance 최신 버전에서는 'Close' 컬럼 아래에 심볼들이 있음
+            if 'Close' in df:
+                close_data = df['Close']
+                
+                for symbol in symbols:
+                    try:
+                        if symbol in close_data:
+                            series = close_data[symbol].dropna()
+                            if not series.empty:
+                                current_price = float(series.iloc[-1])
+                                prev_close = float(series.iloc[-2]) if len(series) >= 2 else current_price
+                                
+                                change = current_price - prev_close
+                                change_percent = (change / prev_close) * 100 if prev_close != 0 else 0
+                                
+                                quotes[symbol] = {
+                                    'price': round(current_price, 2),
+                                    'change': round(change, 2),
+                                    'change_percent': round(change_percent, 2)
+                                }
+                    except Exception as e:
+                        logger.error(f"Error parsing quote for {symbol}: {e}")
+                        continue
+
+        return jsonify(quotes)
+        
+    except Exception as e:
+        logger.error(f"Market quotes API error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/market/status')

@@ -20,6 +20,7 @@ from backtesting.portfolio_manager import PortfolioManager, OrderType
 from utils.position_manager import position_manager
 from utils.market_analyzer import market_analyzer
 from live_trading.risk_manager import risk_manager
+from utils.settings_manager import settings_manager
 
 logger = setup_logger("live_trader")
 
@@ -38,9 +39,12 @@ class LiveTrader:
         초기화
         
         Args:
-            symbols (List[str]): 거래할 종목 리스트
+        Args:
+            symbols (List[str]): 초기 종목 리스트 (설정 파일이 있으면 무시될 수 있음)
         """
+        self.settings_manager = settings_manager
         self.symbols = symbols
+        self.short_term_symbols = []  # 시스템이 선정한 단기 종목
         self.is_running = False
         self.trading_thread = None
         
@@ -90,6 +94,9 @@ class LiveTrader:
             return
         
         self.is_running = True
+        
+        # 종목 리스트 업데이트 (장기 + 단기)
+        self._update_target_symbols()
         
         # 초기 데이터 로드
         self._load_initial_data()
@@ -266,6 +273,10 @@ class LiveTrader:
                 
                 # 포트폴리오 동기화 (주기적)
                 self._sync_portfolio()
+                
+                # 종목 리스트 업데이트 (주기적 - 매일 또는 설정 변경 시)
+                # 현재는 매 루프마다 체크 (설정 변경 즉시 반영을 위해)
+                self._update_target_symbols()
                 
                 # 5분 대기
                 time_module.sleep(300)
@@ -563,4 +574,44 @@ class LiveTrader:
     def get_trade_history(self) -> pd.DataFrame:
         """거래 내역 반환"""
         return self.portfolio_manager.get_trade_history()
+
+    def _update_target_symbols(self):
+        """설정에서 종목 리스트 업데이트 (장기 + 단기)"""
+        try:
+            # 1. 설정 다시 로드
+            self.settings_manager.settings = self.settings_manager._load_settings()
+            
+            # 2. 장기 투자 종목 로드
+            long_term_symbols = self.settings_manager.get_long_term_symbols()
+            
+            # 3. 단기 투자 종목 선정 (활성화 된 경우)
+            short_term_symbols = []
+            if self.settings_manager.is_short_term_enabled():
+                count = self.settings_manager.get_short_term_pool_size()
+                candidates = self.settings_manager.get_short_term_candidates()
+                
+                # 장기 투자 종목 제외 (중복 방지)
+                candidates = [s for s in candidates if s not in long_term_symbols]
+                
+                # TODO: 여기에 지능형 단기 종목 선정 로직 구현 (예: 모멘텀, 거래량 등)
+                # 현재는 후보군 중에서 앞에서부터 N개 선택
+                short_term_symbols = candidates[:count]
+                
+            # 4. 종목 리스트 병합
+            # 기존 symbols와 비교하여 변경사항이 있을 때만 로그 출력
+            new_symbols = list(set(long_term_symbols + short_term_symbols))
+            
+            if set(new_symbols) != set(self.symbols):
+                logger.info(f"🔄 종목 리스트 업데이트: 총 {len(new_symbols)}개")
+                logger.info(f"  - 장기 ({len(long_term_symbols)}): {long_term_symbols}")
+                logger.info(f"  - 단기 ({len(short_term_symbols)}): {short_term_symbols}")
+                
+                self.symbols = new_symbols
+                self.short_term_symbols = short_term_symbols
+                
+                # 새로운 종목에 대한 데이터 로드
+                self._load_initial_data()
+                
+        except Exception as e:
+            log_error(logger, e, "종목 리스트 업데이트")
 

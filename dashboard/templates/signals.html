@@ -1,90 +1,326 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 신호 분석 - AI 트레이더</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .header h1 { font-size: 28px; font-weight: 600; }
-        .logout-btn { background: rgba(255,255,255,0.2); color: white; padding: 10px 20px; border: 2px solid white; border-radius: 6px; cursor: pointer; transition: all 0.3s; }
-        .logout-btn:hover { background: white; color: #667eea; }
-        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border: 2px solid white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
         /* 네비게이션 */
-        .navbar { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.08); padding: 0; margin-bottom: 20px; }
-        .navbar ul { list-style: none; display: flex; margin: 0; padding: 0; }
-        .navbar li { flex: 1; }
-        .navbar a { display: block; padding: 15px 20px; text-decoration: none; color: #333; transition: all 0.3s; text-align: center; border-bottom: 3px solid transparent; }
-        .navbar a:hover, .navbar a.active { background: #f8f9fa; border-bottom-color: #667eea; color: #667eea; font-weight: 600; }
-        
-        .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .card h3 { margin-bottom: 15px; color: #2c3e50; }
-        
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            padding: 0;
+            margin-bottom: 20px;
+        }
+
+        .navbar ul {
+            list-style: none;
+            display: flex;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar li {
+            flex: 1;
+        }
+
+        .navbar a {
+            display: block;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s;
+            text-align: center;
+            border-bottom: 3px solid transparent;
+        }
+
+        .navbar a:hover,
+        .navbar a.active {
+            background: #f8f9fa;
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
         /* 신호 카드 */
-        .signals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
-        .signal-card { background: white; border-radius: 8px; padding: 20px; border-left: 4px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .signal-card.buy { border-left-color: #27ae60; }
-        .signal-card.sell { border-left-color: #e74c3c; }
-        .signal-card.hold { border-left-color: #95a5a6; }
-        
-        .signal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .signal-symbol { font-size: 24px; font-weight: 700; }
-        .signal-type { padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 14px; }
-        .signal-type.buy { background: #d4edda; color: #155724; }
-        .signal-type.sell { background: #f8d7da; color: #721c24; }
-        .signal-type.hold { background: #e2e3e5; color: #383d41; }
-        
-        .signal-detail { margin-top: 10px; font-size: 14px; color: #666; }
-        .signal-detail div { margin-bottom: 5px; }
-        .signal-timestamp { font-size: 12px; color: #999; margin-top: 10px; }
-        
+        .signals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .signal-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .signal-card.buy {
+            border-left-color: #27ae60;
+        }
+
+        .signal-card.sell {
+            border-left-color: #e74c3c;
+        }
+
+        .signal-card.hold {
+            border-left-color: #95a5a6;
+        }
+
+        .signal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .signal-symbol {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .signal-type {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .signal-type.buy {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .signal-type.sell {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .signal-type.hold {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .signal-detail {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .signal-detail div {
+            margin-bottom: 5px;
+        }
+
+        .signal-timestamp {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+        }
+
         /* 필터 */
-        .filter-panel { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-        .filter-panel select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        .filter-panel button { background: #667eea; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; }
-        .filter-panel button:hover { background: #5568d3; }
-        
+        .filter-panel {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .filter-panel select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .filter-panel button {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .filter-panel button:hover {
+            background: #5568d3;
+        }
+
         /* 페이지네이션 */
-        .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; }
-        .pagination button { padding: 8px 16px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px; }
-        .pagination button:hover { background: #f8f9fa; }
-        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .pagination .page-info { color: #666; }
-        
-        .no-signals { text-align: center; padding: 60px 20px; color: #999; }
-        .no-signals-icon { font-size: 48px; margin-bottom: 20px; }
-        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .pagination button:hover {
+            background: #f8f9fa;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .page-info {
+            color: #666;
+        }
+
+        .no-signals {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .no-signals-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
         /* 반응형 디자인 */
         @media (max-width: 768px) {
-            .header { flex-direction: column; gap: 10px; text-align: center; }
-            .header h1 { font-size: 22px; }
+            .header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
             /* 모바일에서도 메뉴는 가로 유지 (2줄로 표시) */
-            .navbar ul { flex-wrap: wrap; }
-            .navbar li { flex: 1 1 50%; min-width: 50%; }
-            .navbar a { border-bottom: 1px solid #eee; border-right: 1px solid #eee; padding: 12px 10px; font-size: 14px; }
-            .signals-grid { grid-template-columns: 1fr; }
-            .filter-panel { flex-direction: column; }
-            .filter-panel select, .filter-panel button { width: 100%; }
+            .navbar ul {
+                flex-wrap: wrap;
+            }
+
+            .navbar li {
+                flex: 1 1 50%;
+                min-width: 50%;
+            }
+
+            .navbar a {
+                border-bottom: 1px solid #eee;
+                border-right: 1px solid #eee;
+                padding: 12px 10px;
+                font-size: 14px;
+            }
+
+            .signals-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-panel {
+                flex-direction: column;
+            }
+
+            .filter-panel select,
+            .filter-panel button {
+                width: 100%;
+            }
         }
-        
+
         @media (max-width: 480px) {
-            .container { padding: 0 10px; }
-            .card { padding: 15px; }
-            .header h1 { font-size: 18px; }
-            .signal-card { padding: 15px; }
-            .signal-symbol { font-size: 20px; }
+            .container {
+                padding: 0 10px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .signal-card {
+                padding: 15px;
+            }
+
+            .signal-symbol {
+                font-size: 20px;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <h1>🎯 AI 신호 분석</h1>
         <button class="logout-btn" onclick="logout()">로그아웃</button>
     </div>
-    
+
     <!-- 네비게이션 -->
     <nav class="navbar">
         <ul>
@@ -93,9 +329,10 @@
             <li><a href="/signals" class="active">🎯 AI 신호</a></li>
             <li><a href="/reports">📋 일일 레포트</a></li>
             <li><a href="/logs_page">📝 로그</a></li>
+            <li><a href="/settings">⚙️ 설정</a></li>
         </ul>
     </nav>
-    
+
     <div class="container">
         <div class="card">
             <h3>🔍 필터</h3>
@@ -110,19 +347,19 @@
                     <option value="META">META</option>
                     <option value="TSLA">TSLA</option>
                 </select>
-                
+
                 <select id="type-filter">
                     <option value="">전체 신호</option>
                     <option value="BUY">매수 신호</option>
                     <option value="SELL">매도 신호</option>
                     <option value="HOLD">관망</option>
                 </select>
-                
+
                 <button onclick="applyFilters()">필터 적용</button>
                 <button onclick="clearFilters()" style="background: #6c757d;">초기화</button>
             </div>
         </div>
-        
+
         <div class="card">
             <h3>📡 최근 AI 신호 (실시간)</h3>
             <div id="signals-container">
@@ -131,7 +368,7 @@
                     <div>데이터 로딩 중...</div>
                 </div>
             </div>
-            
+
             <div class="pagination">
                 <button id="prev-btn" onclick="previousPage()">← 이전</button>
                 <span class="page-info" id="page-info">1 / 1</span>
@@ -139,23 +376,23 @@
             </div>
         </div>
     </div>
-    
+
     <script>
         let currentPage = 1;
         let totalPages = 1;
         let currentFilters = {};
-        
+
         function logout() {
             window.location.href = '/logout';
         }
-        
+
         function loadSignals(page = 1) {
             const params = new URLSearchParams({
                 page: page,
                 per_page: 20,
                 ...currentFilters
             });
-            
+
             fetch(`/api/signals/history?${params}`)
                 .then(response => response.json())
                 .then(data => {
@@ -169,10 +406,10 @@
                     showError();
                 });
         }
-        
+
         function updateSignalsDisplay(signals) {
             const container = document.getElementById('signals-container');
-            
+
             if (signals.length === 0) {
                 container.innerHTML = `
                     <div class="no-signals">
@@ -182,12 +419,12 @@
                 `;
                 return;
             }
-            
+
             const signalsHTML = signals.map(signal => {
                 // 신호 타입 추출 (BUY, SELL, HOLD)
                 const signalType = extractSignalType(signal.message);
                 const signalClass = signalType.toLowerCase();
-                
+
                 return `
                     <div class="signal-card ${signalClass}">
                         <div class="signal-header">
@@ -203,16 +440,16 @@
                     </div>
                 `;
             }).join('');
-            
+
             container.innerHTML = `<div class="signals-grid">${signalsHTML}</div>`;
         }
-        
+
         function extractSignalType(message) {
             if (message.includes('BUY') || message.includes('매수')) return 'BUY';
             if (message.includes('SELL') || message.includes('매도')) return 'SELL';
             return 'HOLD';
         }
-        
+
         function formatTimestamp(timestamp) {
             try {
                 const date = new Date(timestamp);
@@ -221,44 +458,44 @@
                 return timestamp;
             }
         }
-        
+
         function updatePagination() {
             document.getElementById('page-info').textContent = `${currentPage} / ${totalPages}`;
             document.getElementById('prev-btn').disabled = currentPage <= 1;
             document.getElementById('next-btn').disabled = currentPage >= totalPages;
         }
-        
+
         function previousPage() {
             if (currentPage > 1) {
                 loadSignals(currentPage - 1);
             }
         }
-        
+
         function nextPage() {
             if (currentPage < totalPages) {
                 loadSignals(currentPage + 1);
             }
         }
-        
+
         function applyFilters() {
             currentFilters = {};
-            
+
             const symbol = document.getElementById('symbol-filter').value;
             const type = document.getElementById('type-filter').value;
-            
+
             if (symbol) currentFilters.symbol = symbol;
             if (type) currentFilters.signal_type = type;
-            
+
             loadSignals(1);
         }
-        
+
         function clearFilters() {
             document.getElementById('symbol-filter').value = '';
             document.getElementById('type-filter').value = '';
             currentFilters = {};
             loadSignals(1);
         }
-        
+
         function showError() {
             const container = document.getElementById('signals-container');
             container.innerHTML = `
@@ -268,15 +505,15 @@
                 </div>
             `;
         }
-        
+
         // 초기 로드
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             loadSignals(1);
-            
+
             // 15초마다 자동 새로고침 (실시간 신호)
             setInterval(() => loadSignals(currentPage), 15000);
         });
     </script>
 </body>
-</html>
 
+</html>

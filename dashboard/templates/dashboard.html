@@ -1,203 +1,399 @@
+<!DOCTYPE html>
+<html lang="ko">
 
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AI 트레이더 대시보드</title>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-        <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-            .header h1 { font-size: 28px; font-weight: 600; }
-            .logout-btn { background: rgba(255,255,255,0.2); color: white; padding: 10px 20px; border: 2px solid white; border-radius: 6px; cursor: pointer; transition: all 0.3s; }
-            .logout-btn:hover { background: white; color: #667eea; }
-            
-            /* 네비게이션 */
-            .navbar { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.08); padding: 0; margin-bottom: 20px; }
-            .navbar ul { list-style: none; display: flex; margin: 0; padding: 0; }
-            .navbar li { flex: 1; }
-            .navbar a { display: block; padding: 15px 20px; text-decoration: none; color: #333; transition: all 0.3s; text-align: center; border-bottom: 3px solid transparent; }
-            .navbar a:hover, .navbar a.active { background: #f8f9fa; border-bottom-color: #667eea; color: #667eea; font-weight: 600; }
-            .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
-            .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
-            .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-            .card h3 { margin-bottom: 15px; color: #2c3e50; }
-            .metric { display: flex; justify-content: space-between; margin-bottom: 10px; }
-            .metric-value { font-weight: bold; }
-            .positive { color: #27ae60; }
-            .negative { color: #e74c3c; }
-            .control-panel { display: flex; gap: 10px; margin-bottom: 20px; }
-            .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-            .btn-start { background: #27ae60; color: white; }
-            .btn-stop { background: #e74c3c; color: white; }
-            .btn-emergency { background: #f39c12; color: white; }
-            .status { padding: 10px; border-radius: 4px; margin-bottom: 20px; }
-            .status.running { background: #d4edda; color: #155724; }
-            .status.stopped { background: #f8d7da; color: #721c24; }
-            .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            .table th, .table td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-            .table th { background-color: #f8f9fa; }
-            .refresh-btn { background: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; }
-            
-            /* 반응형 디자인 */
-            @media (max-width: 768px) {
-                .header { flex-direction: column; gap: 10px; text-align: center; }
-                .header h1 { font-size: 22px; }
-                /* 모바일에서도 메뉴는 가로 유지 (2줄로 표시) */
-                .navbar ul { flex-wrap: wrap; }
-                .navbar li { flex: 1 1 50%; min-width: 50%; }
-                .navbar a { border-bottom: 1px solid #eee; border-right: 1px solid #eee; padding: 12px 10px; font-size: 14px; }
-                .dashboard-grid { grid-template-columns: 1fr; }
-                .control-panel { flex-direction: column; }
-                .control-panel button { width: 100%; }
-                .metric { font-size: 14px; }
-                .table { font-size: 12px; }
-                .table th, .table td { padding: 6px; }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 트레이더 대시보드</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border: 2px solid white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        /* 네비게이션 */
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            padding: 0;
+            margin-bottom: 20px;
+        }
+
+        .navbar ul {
+            list-style: none;
+            display: flex;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar li {
+            flex: 1;
+        }
+
+        .navbar a {
+            display: block;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s;
+            text-align: center;
+            border-bottom: 3px solid transparent;
+        }
+
+        .navbar a:hover,
+        .navbar a.active {
+            background: #f8f9fa;
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-weight: bold;
+        }
+
+        .positive {
+            color: #27ae60;
+        }
+
+        .negative {
+            color: #e74c3c;
+        }
+
+        .control-panel {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-start {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-stop {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-emergency {
+            background: #f39c12;
+            color: white;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .status.running {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.stopped {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .table th,
+        .table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+        }
+
+        .refresh-btn {
+            background: #007bff;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
             }
-            
-            @media (max-width: 480px) {
-                .container { padding: 0 10px; }
-                .card { padding: 15px; }
-                .header h1 { font-size: 18px; }
-                .metric-value { font-size: 20px !important; }
+
+            .header h1 {
+                font-size: 22px;
             }
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <h1>🤖 AI 주식 트레이더 대시보드</h1>
-            <button class="logout-btn" onclick="logout()">로그아웃</button>
+
+            /* 모바일에서도 메뉴는 가로 유지 (2줄로 표시) */
+            .navbar ul {
+                flex-wrap: wrap;
+            }
+
+            .navbar li {
+                flex: 1 1 50%;
+                min-width: 50%;
+            }
+
+            .navbar a {
+                border-bottom: 1px solid #eee;
+                border-right: 1px solid #eee;
+                padding: 12px 10px;
+                font-size: 14px;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .control-panel {
+                flex-direction: column;
+            }
+
+            .control-panel button {
+                width: 100%;
+            }
+
+            .metric {
+                font-size: 14px;
+            }
+
+            .table {
+                font-size: 12px;
+            }
+
+            .table th,
+            .table td {
+                padding: 6px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 10px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .metric-value {
+                font-size: 20px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🤖 AI 주식 트레이더 대시보드</h1>
+        <button class="logout-btn" onclick="logout()">로그아웃</button>
+    </div>
+
+    <button class="btn btn-start" onclick="controlTrader('start')">거래 시작</button>
+    <button class="btn btn-stop" onclick="controlTrader('stop')">거래 중지</button>
+    <button class="btn btn-emergency" onclick="controlTrader('emergency_stop')">긴급 정지</button>
+    <button class="refresh-btn" onclick="refreshData()">새로고침</button>
+    </div>
+
+    <div id="status" class="status stopped">상태: 중지됨</div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <h3>포트폴리오 현황</h3>
+            <div id="portfolio-info">
+                <div class="metric">
+                    <span>포트폴리오 가치:</span>
+                    <span class="metric-value" id="portfolio-value">$0</span>
+                </div>
+                <div class="metric">
+                    <span>현금:</span>
+                    <span class="metric-value" id="cash">$0</span>
+                </div>
+                <div class="metric">
+                    <span>총 수익률:</span>
+                    <span class="metric-value" id="total-return">0%</span>
+                </div>
+                <div class="metric">
+                    <span>보유 포지션:</span>
+                    <span class="metric-value" id="num-positions">0개</span>
+                </div>
+            </div>
         </div>
-        
-        <!-- 네비게이션 -->
-        <nav class="navbar">
-            <ul>
-                <li><a href="/" class="active">📊 대시보드</a></li>
-                <li><a href="/history">📈 거래 이력</a></li>
-                <li><a href="/signals">🎯 AI 신호</a></li>
-                <li><a href="/reports">📋 일일 레포트</a></li>
-                <li><a href="/logs_page">📝 로그</a></li>
-            </ul>
-        </nav>
-        
-        <div class="container">
-            <div class="control-panel">
-                <button class="btn btn-start" onclick="controlTrader('start')">거래 시작</button>
-                <button class="btn btn-stop" onclick="controlTrader('stop')">거래 중지</button>
-                <button class="btn btn-emergency" onclick="controlTrader('emergency_stop')">긴급 정지</button>
-                <button class="refresh-btn" onclick="refreshData()">새로고침</button>
-            </div>
-            
-            <div id="status" class="status stopped">상태: 중지됨</div>
-            
-            <div class="dashboard-grid">
-                <div class="card">
-                    <h3>포트폴리오 현황</h3>
-                    <div id="portfolio-info">
-                        <div class="metric">
-                            <span>포트폴리오 가치:</span>
-                            <span class="metric-value" id="portfolio-value">$0</span>
-                        </div>
-                        <div class="metric">
-                            <span>현금:</span>
-                            <span class="metric-value" id="cash">$0</span>
-                        </div>
-                        <div class="metric">
-                            <span>총 수익률:</span>
-                            <span class="metric-value" id="total-return">0%</span>
-                        </div>
-                        <div class="metric">
-                            <span>보유 포지션:</span>
-                            <span class="metric-value" id="num-positions">0개</span>
-                        </div>
-                    </div>
+
+        <div class="card">
+            <h3>거래 현황</h3>
+            <div id="trading-info">
+                <div class="metric">
+                    <span>일일 거래:</span>
+                    <span class="metric-value" id="daily-trades">0회</span>
                 </div>
-                
-                <div class="card">
-                    <h3>거래 현황</h3>
-                    <div id="trading-info">
-                        <div class="metric">
-                            <span>일일 거래:</span>
-                            <span class="metric-value" id="daily-trades">0회</span>
-                        </div>
-                        <div class="metric">
-                            <span>거래 상태:</span>
-                            <span class="metric-value" id="trading-status">중지</span>
-                        </div>
-                    </div>
+                <div class="metric">
+                    <span>거래 상태:</span>
+                    <span class="metric-value" id="trading-status">중지</span>
                 </div>
-                
-                <div class="card">
-                    <h3>보유 포지션</h3>
-                    <div id="positions-table">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>종목</th>
-                                    <th>수량</th>
-                                    <th>평균가</th>
-                                    <th>현재가</th>
-                                    <th>손익</th>
-                                </tr>
-                            </thead>
-                            <tbody id="positions-tbody">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <h3>최근 거래</h3>
-                    <div id="trades-table">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>시간</th>
-                                    <th>종목</th>
-                                    <th>거래</th>
-                                    <th>수량</th>
-                                    <th>가격</th>
-                                    <th>손익</th>
-                                </tr>
-                            </thead>
-                            <tbody id="trades-tbody">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 성과 차트 -->
-            <div class="card">
-                <h3>📈 성과 차트 (최근 30일)</h3>
-                <canvas id="performanceChart" style="max-height: 400px;"></canvas>
-            </div>
-            
-            <!-- Export 기능 -->
-            <div class="card" style="margin-top: 20px;">
-                <h3>💾 데이터 Export</h3>
-                <button class="btn" style="background: #28a745;" onclick="exportTrades()">거래 내역 CSV 다운로드</button>
             </div>
         </div>
-        
-        <script>
-            let refreshInterval;
-            let performanceChart = null;
-            
-            function logout() {
-                window.location.href = '/logout';
-            }
-            
-            function controlTrader(action) {
-                fetch('/api/control', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({action: action})
-                })
+
+        <div class="card">
+            <h3>보유 포지션</h3>
+            <div id="positions-table">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>종목</th>
+                            <th>수량</th>
+                            <th>평균가</th>
+                            <th>현재가</th>
+                            <th>손익</th>
+                        </tr>
+                    </thead>
+                    <tbody id="positions-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>최근 거래</h3>
+            <div id="trades-table">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>시간</th>
+                            <th>종목</th>
+                            <th>거래</th>
+                            <th>수량</th>
+                            <th>가격</th>
+                            <th>손익</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trades-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 성과 차트 -->
+    <div class="card">
+        <h3>📈 성과 차트 (최근 30일)</h3>
+        <canvas id="performanceChart" style="max-height: 400px;"></canvas>
+    </div>
+
+    <!-- Export 기능 -->
+    <div class="card" style="margin-top: 20px;">
+        <h3>💾 데이터 Export</h3>
+        <button class="btn" style="background: #28a745;" onclick="exportTrades()">거래 내역 CSV 다운로드</button>
+    </div>
+    </div>
+
+    <script>
+        let refreshInterval;
+        let performanceChart = null;
+
+        function logout() {
+            window.location.href = '/logout';
+        }
+
+        function controlTrader(action) {
+            fetch('/api/control', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action: action })
+            })
                 .then(response => response.json())
                 .then(data => {
                     console.log('Control response:', data);
@@ -206,187 +402,187 @@
                 .catch(error => {
                     console.error('Control error:', error);
                 });
+        }
+
+        function refreshData() {
+            // 포트폴리오 정보 업데이트
+            fetch('/api/portfolio')
+                .then(response => response.json())
+                .then(data => {
+                    updatePortfolioInfo(data);
+                })
+                .catch(error => console.error('Portfolio error:', error));
+
+            // 거래 내역 업데이트
+            fetch('/api/trades')
+                .then(response => response.json())
+                .then(data => {
+                    updateTradesTable(data.trades || data);
+                })
+                .catch(error => console.error('Trades error:', error));
+
+            // 성과 정보 업데이트
+            fetch('/api/performance')
+                .then(response => response.json())
+                .then(data => {
+                    updatePerformanceInfo(data);
+                })
+                .catch(error => console.error('Performance error:', error));
+
+            // 차트 업데이트
+            fetch('/api/performance/chart?days=30')
+                .then(response => response.json())
+                .then(data => {
+                    updatePerformanceChart(data);
+                })
+                .catch(error => console.error('Chart error:', error));
+        }
+
+        function exportTrades() {
+            window.location.href = '/api/export/trades';
+        }
+
+        function updatePortfolioInfo(data) {
+            document.getElementById('portfolio-value').textContent = '$' + (data.portfolio_value || 0).toLocaleString();
+            document.getElementById('cash').textContent = '$' + (data.cash || 0).toLocaleString();
+
+            const totalReturn = (data.total_return || 0) * 100;
+            const returnElement = document.getElementById('total-return');
+            returnElement.textContent = totalReturn.toFixed(2) + '%';
+            returnElement.className = 'metric-value ' + (totalReturn >= 0 ? 'positive' : 'negative');
+
+            document.getElementById('num-positions').textContent = Object.keys(data.positions || {}).length + '개';
+
+            // 포지션 테이블 업데이트
+            updatePositionsTable(data.positions || {});
+        }
+
+        function updatePositionsTable(positions) {
+            const tbody = document.getElementById('positions-tbody');
+            tbody.innerHTML = '';
+
+            for (const [symbol, pos] of Object.entries(positions)) {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = symbol;
+                row.insertCell(1).textContent = pos.quantity;
+                row.insertCell(2).textContent = '$' + pos.avg_price.toFixed(2);
+                row.insertCell(3).textContent = '$' + pos.current_price.toFixed(2);
+
+                const pnlCell = row.insertCell(4);
+                pnlCell.textContent = '$' + pos.unrealized_pnl.toFixed(2);
+                pnlCell.className = pos.unrealized_pnl >= 0 ? 'positive' : 'negative';
             }
-            
-            function refreshData() {
-                // 포트폴리오 정보 업데이트
-                fetch('/api/portfolio')
-                    .then(response => response.json())
-                    .then(data => {
-                        updatePortfolioInfo(data);
-                    })
-                    .catch(error => console.error('Portfolio error:', error));
-                
-                // 거래 내역 업데이트
-                fetch('/api/trades')
-                    .then(response => response.json())
-                    .then(data => {
-                        updateTradesTable(data.trades || data);
-                    })
-                    .catch(error => console.error('Trades error:', error));
-                
-                // 성과 정보 업데이트
-                fetch('/api/performance')
-                    .then(response => response.json())
-                    .then(data => {
-                        updatePerformanceInfo(data);
-                    })
-                    .catch(error => console.error('Performance error:', error));
-                
-                // 차트 업데이트
-                fetch('/api/performance/chart?days=30')
-                    .then(response => response.json())
-                    .then(data => {
-                        updatePerformanceChart(data);
-                    })
-                    .catch(error => console.error('Chart error:', error));
+        }
+
+        function updateTradesTable(trades) {
+            const tbody = document.getElementById('trades-tbody');
+            tbody.innerHTML = '';
+
+            trades.slice(-10).reverse().forEach(trade => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = new Date(trade.timestamp).toLocaleString();
+                row.insertCell(1).textContent = trade.symbol;
+                row.insertCell(2).textContent = trade.order_type;
+                row.insertCell(3).textContent = trade.quantity;
+                row.insertCell(4).textContent = '$' + trade.price.toFixed(2);
+
+                const pnlCell = row.insertCell(5);
+                pnlCell.textContent = '$' + (trade.pnl || 0).toFixed(2);
+                pnlCell.className = (trade.pnl || 0) >= 0 ? 'positive' : 'negative';
+            });
+        }
+
+        function updatePerformanceInfo(data) {
+            document.getElementById('daily-trades').textContent = (data.daily_trades || 0) + '회';
+            document.getElementById('trading-status').textContent = data.is_running ? '실행 중' : '중지';
+
+            // 상태 표시 업데이트
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = '상태: ' + (data.is_running ? '실행 중' : '중지됨');
+            statusElement.className = 'status ' + (data.is_running ? 'running' : 'stopped');
+        }
+
+        function updatePerformanceChart(data) {
+            const ctx = document.getElementById('performanceChart');
+            if (!ctx) return;
+
+            // 기존 차트 삭제
+            if (performanceChart) {
+                performanceChart.destroy();
             }
-            
-            function exportTrades() {
-                window.location.href = '/api/export/trades';
+
+            // 데이터가 없으면 빈 차트
+            if (!data.labels || data.labels.length === 0) {
+                ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+                return;
             }
-            
-            function updatePortfolioInfo(data) {
-                document.getElementById('portfolio-value').textContent = '$' + (data.portfolio_value || 0).toLocaleString();
-                document.getElementById('cash').textContent = '$' + (data.cash || 0).toLocaleString();
-                
-                const totalReturn = (data.total_return || 0) * 100;
-                const returnElement = document.getElementById('total-return');
-                returnElement.textContent = totalReturn.toFixed(2) + '%';
-                returnElement.className = 'metric-value ' + (totalReturn >= 0 ? 'positive' : 'negative');
-                
-                document.getElementById('num-positions').textContent = Object.keys(data.positions || {}).length + '개';
-                
-                // 포지션 테이블 업데이트
-                updatePositionsTable(data.positions || {});
-            }
-            
-            function updatePositionsTable(positions) {
-                const tbody = document.getElementById('positions-tbody');
-                tbody.innerHTML = '';
-                
-                for (const [symbol, pos] of Object.entries(positions)) {
-                    const row = tbody.insertRow();
-                    row.insertCell(0).textContent = symbol;
-                    row.insertCell(1).textContent = pos.quantity;
-                    row.insertCell(2).textContent = '$' + pos.avg_price.toFixed(2);
-                    row.insertCell(3).textContent = '$' + pos.current_price.toFixed(2);
-                    
-                    const pnlCell = row.insertCell(4);
-                    pnlCell.textContent = '$' + pos.unrealized_pnl.toFixed(2);
-                    pnlCell.className = pos.unrealized_pnl >= 0 ? 'positive' : 'negative';
-                }
-            }
-            
-            function updateTradesTable(trades) {
-                const tbody = document.getElementById('trades-tbody');
-                tbody.innerHTML = '';
-                
-                trades.slice(-10).reverse().forEach(trade => {
-                    const row = tbody.insertRow();
-                    row.insertCell(0).textContent = new Date(trade.timestamp).toLocaleString();
-                    row.insertCell(1).textContent = trade.symbol;
-                    row.insertCell(2).textContent = trade.order_type;
-                    row.insertCell(3).textContent = trade.quantity;
-                    row.insertCell(4).textContent = '$' + trade.price.toFixed(2);
-                    
-                    const pnlCell = row.insertCell(5);
-                    pnlCell.textContent = '$' + (trade.pnl || 0).toFixed(2);
-                    pnlCell.className = (trade.pnl || 0) >= 0 ? 'positive' : 'negative';
-                });
-            }
-            
-            function updatePerformanceInfo(data) {
-                document.getElementById('daily-trades').textContent = (data.daily_trades || 0) + '회';
-                document.getElementById('trading-status').textContent = data.is_running ? '실행 중' : '중지';
-                
-                // 상태 표시 업데이트
-                const statusElement = document.getElementById('status');
-                statusElement.textContent = '상태: ' + (data.is_running ? '실행 중' : '중지됨');
-                statusElement.className = 'status ' + (data.is_running ? 'running' : 'stopped');
-            }
-            
-            function updatePerformanceChart(data) {
-                const ctx = document.getElementById('performanceChart');
-                if (!ctx) return;
-                
-                // 기존 차트 삭제
-                if (performanceChart) {
-                    performanceChart.destroy();
-                }
-                
-                // 데이터가 없으면 빈 차트
-                if (!data.labels || data.labels.length === 0) {
-                    ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
-                    return;
-                }
-                
-                // 새 차트 생성
-                performanceChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: '포트폴리오 가치 ($)',
-                            data: data.portfolio_values,
-                            borderColor: '#667eea',
-                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top'
-                            },
-                            tooltip: {
-                                mode: 'index',
-                                intersect: false,
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        label += '$' + context.parsed.y.toLocaleString();
-                                        return label;
+
+            // 새 차트 생성
+            performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: '포트폴리오 가치 ($)',
+                        data: data.portfolio_values,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
                                     }
+                                    label += '$' + context.parsed.y.toLocaleString();
+                                    return label;
                                 }
                             }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: false,
-                                ticks: {
-                                    callback: function(value) {
-                                        return '$' + value.toLocaleString();
-                                    }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function (value) {
+                                    return '$' + value.toLocaleString();
                                 }
                             }
                         }
                     }
-                });
-            }
-            
-            // 초기 로드
-            document.addEventListener('DOMContentLoaded', function() {
-                refreshData();
-                
-                // 30초마다 자동 새로고침
-                refreshInterval = setInterval(refreshData, 30000);
-            });
-            
-            // 페이지 언로드 시 인터벌 정리
-            window.addEventListener('beforeunload', function() {
-                if (refreshInterval) {
-                    clearInterval(refreshInterval);
                 }
             });
-        </script>
-    </body>
-    </html>
-    
+        }
+
+        // 초기 로드
+        document.addEventListener('DOMContentLoaded', function () {
+            refreshData();
+
+            // 30초마다 자동 새로고침
+            refreshInterval = setInterval(refreshData, 30000);
+        });
+
+        // 페이지 언로드 시 인터벌 정리
+        window.addEventListener('beforeunload', function () {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        });
+    </script>
+</body>
+
+</html>
