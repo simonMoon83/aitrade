@@ -1,572 +1,135 @@
-<!DOCTYPE html>
-<html lang="ko">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로그 뷰어 - AI 트레이더</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .header h1 {
-            font-size: 28px;
-            font-weight: 600;
-        }
-
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 10px 20px;
-            border: 2px solid white;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .logout-btn:hover {
-            background: white;
-            color: #667eea;
-        }
-
-        /* 네비게이션 */
-        .navbar {
-            background: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-            padding: 0;
-            margin-bottom: 20px;
-        }
-
-        .navbar ul {
-            list-style: none;
-            display: flex;
-            margin: 0;
-            padding: 0;
-        }
-
-        .navbar li {
-            flex: 1;
-        }
-
-        .navbar a {
-            display: block;
-            padding: 15px 20px;
-            text-decoration: none;
-            color: #333;
-            transition: all 0.3s;
-            text-align: center;
-            border-bottom: 3px solid transparent;
-        }
-
-        .navbar a:hover,
-        .navbar a.active {
-            background: #f8f9fa;
-            border-bottom-color: #667eea;
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .container {
-            max-width: 1600px;
-            margin: 20px auto;
-            padding: 0 20px;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-
-        .card h3 {
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-
-        /* 필터 */
-        .filter-panel {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-            align-items: center;
-        }
-
-        .filter-panel select,
-        .filter-panel input {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .filter-panel button {
-            background: #667eea;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .filter-panel button:hover {
-            background: #5568d3;
-        }
-
-        .filter-panel>label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        .filter-panel input[type="checkbox"] {
-            cursor: pointer;
-            width: auto;
-            min-width: 16px;
-            flex-shrink: 0;
-        }
-
-        /* 로그 컨테이너 */
-        .log-container {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            font-family: 'Courier New', Consolas, monospace;
-            padding: 20px;
-            border-radius: 8px;
-            max-height: 600px;
-            overflow-y: auto;
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        .log-entry {
-            margin-bottom: 2px;
-            padding: 4px 8px;
-            border-radius: 3px;
-            transition: background 0.2s;
-        }
-
-        .log-entry:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        /* 로그 레벨 색상 */
-        .log-info {
-            color: #4fc3f7;
-        }
-
-        .log-warning {
-            color: #ffb74d;
-        }
-
-        .log-error {
-            color: #f44336;
-        }
-
-        .log-debug {
-            color: #9e9e9e;
-        }
-
-        .log-timestamp {
-            color: #888;
-        }
-
-        .log-level {
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 3px;
-            margin: 0 4px;
-        }
-
-        .log-level.INFO {
-            background: rgba(79, 195, 247, 0.2);
-            color: #4fc3f7;
-        }
-
-        .log-level.WARNING {
-            background: rgba(255, 183, 77, 0.2);
-            color: #ffb74d;
-        }
-
-        .log-level.ERROR {
-            background: rgba(244, 67, 54, 0.2);
-            color: #f44336;
-        }
-
-        .log-level.DEBUG {
-            background: rgba(158, 158, 158, 0.2);
-            color: #9e9e9e;
-        }
-
-        .log-message {
-            color: #d4d4d4;
-        }
-
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .stat-item {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 6px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        .no-logs {
-            text-align: center;
-            padding: 60px 20px;
-            color: #999;
-        }
-
-        /* 반응형 디자인 */
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
-            }
-
-            .header h1 {
-                font-size: 22px;
-            }
-
-            /* 모바일에서도 메뉴는 가로 유지 (2줄로 표시) */
-            .navbar ul {
-                flex-wrap: wrap;
-            }
-
-            .navbar li {
-                flex: 1 1 50%;
-                min-width: 50%;
-            }
-
-            .navbar a {
-                border-bottom: 1px solid #eee;
-                border-right: 1px solid #eee;
-                padding: 12px 10px;
-                font-size: 14px;
-            }
-
-            .filter-panel {
-                flex-direction: column;
-                gap: 10px;
-                align-items: stretch;
-            }
-
-            .filter-panel select,
-            .filter-panel button {
-                width: 100%;
-            }
-
-            .filter-panel>label {
-                width: auto;
-                display: flex;
-                align-items: center;
-                align-self: flex-start;
-                gap: 8px;
-            }
-
-            .stats {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .log-container {
-                max-height: 400px;
-                font-size: 11px;
-                padding: 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 0 10px;
-            }
-
-            .card {
-                padding: 15px;
-            }
-
-            .header h1 {
-                font-size: 18px;
-            }
-
-            .stats {
-                grid-template-columns: 1fr;
-            }
-
-            .log-container {
-                font-size: 10px;
-                padding: 10px;
-            }
-
-            /* 체크박스를 더 명확하게 */
-            .filter-panel>label {
-                font-size: 13px;
-                padding: 8px 0;
-                gap: 8px;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="header">
-        <h1>📝 실시간 로그 뷰어</h1>
-        <button class="logout-btn" onclick="logout()">로그아웃</button>
-    </div>
-
-    <!-- 네비게이션 -->
-    <nav class="navbar">
-        <ul>
-            <li><a href="/">📊 대시보드</a></li>
-            <li><a href="/history">📈 거래 이력</a></li>
-            <li><a href="/signals">🎯 AI 신호</a></li>
-            <li><a href="/reports">📋 일일 레포트</a></li>
-            <li><a href="/logs_page" class="active">📝 로그</a></li>
-            <li><a href="/settings">⚙️ 설정</a></li>
-        </ul>
-    </nav>
-
-    <div class="container">
-        <!-- 통계 -->
-        <div class="stats">
-            <div class="stat-item">
-                <div class="stat-value" id="total-logs">0</div>
-                <div class="stat-label">전체 로그</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="error-count" style="color: #f44336;">0</div>
-                <div class="stat-label">에러</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="warning-count" style="color: #ffb74d;">0</div>
-                <div class="stat-label">경고</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="info-count" style="color: #4fc3f7;">0</div>
-                <div class="stat-label">정보</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3>🔍 필터 및 설정</h3>
-            <div class="filter-panel">
-                <select id="log-type-filter">
-                    <option value="paper_trader">Paper Trader</option>
-                    <option value="main">Main</option>
-                    <option value="improved_buy_low_sell_high">Strategy</option>
-                    <option value="data_collector">Data Collector</option>
-                </select>
-
-                <select id="level-filter">
-                    <option value="ALL">전체 레벨</option>
-                    <option value="INFO">INFO</option>
-                    <option value="WARNING">WARNING</option>
-                    <option value="ERROR">ERROR</option>
-                    <option value="DEBUG">DEBUG</option>
-                </select>
-
-                <select id="limit-filter">
-                    <option value="100">100줄</option>
-                    <option value="200">200줄</option>
-                    <option value="500">500줄</option>
-                    <option value="1000">1000줄</option>
-                </select>
-
-                <button onclick="loadLogs()">새로고침</button>
-                <button onclick="clearLogView()" style="background: #e74c3c;">지우기</button>
-
-                <label>
-                    <input type="checkbox" id="auto-scroll" checked>
-                    자동 스크롤
-                </label>
-
-                <label>
-                    <input type="checkbox" id="auto-refresh" checked>
-                    자동 새로고침 (5초)
-                </label>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3>📋 로그 (실시간)</h3>
-            <div class="log-container" id="log-container">
-                <div class="no-logs">데이터 로딩 중...</div>
-            </div>
+{% extends "base.html" %}
+
+{% block title %}AI 트레이더 - 시스템 로그{% endblock %}
+
+{% block extra_css %}
+<style>
+    .log-container {
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 1.5rem;
+        border-radius: 8px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        height: 600px;
+        overflow-y: auto;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        border: 1px solid #334155;
+    }
+
+    .log-entry {
+        margin-bottom: 0.25rem;
+        display: flex;
+        gap: 1rem;
+    }
+
+    .log-time {
+        color: #94a3b8;
+        min-width: 150px;
+    }
+
+    .log-level {
+        font-weight: bold;
+        min-width: 60px;
+    }
+
+    .log-message {
+        flex: 1;
+        word-break: break-all;
+    }
+
+    .level-INFO {
+        color: #3b82f6;
+    }
+
+    .level-WARNING {
+        color: #f59e0b;
+    }
+
+    .level-ERROR {
+        color: #ef4444;
+    }
+
+    .level-DEBUG {
+        color: #64748b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3>📝 시스템 로그</h3>
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-primary" onclick="refreshLogs()">🔄 새로고침</button>
+            <button class="btn btn-danger" onclick="clearLogs()">🗑️ 로그 지우기</button>
         </div>
     </div>
 
-    <script>
-        let autoRefreshInterval = null;
-        let stats = { total: 0, error: 0, warning: 0, info: 0 };
+    <div id="log-viewer" class="log-container">
+        <div style="text-align:center; padding:2rem; color:#64748b;">로그 로딩 중...</div>
+    </div>
+</div>
+{% endblock %}
 
-        function logout() {
-            window.location.href = '/logout';
-        }
+{% block extra_js %}
+<script>
+    function refreshLogs() {
+        fetch('/api/logs')
+            .then(response => response.json())
+            .then(data => {
+                const logViewer = document.getElementById('log-viewer');
+                logViewer.innerHTML = '';
 
-        function loadLogs() {
-            const logType = document.getElementById('log-type-filter').value;
-            const level = document.getElementById('level-filter').value;
-            const limit = document.getElementById('limit-filter').value;
+                const logs = data.logs || data;
 
-            const params = new URLSearchParams({
-                type: logType,
-                level: level,
-                limit: limit
-            });
-
-            fetch(`/api/logs?${params}`)
-                .then(response => response.json())
-                .then(data => {
-                    updateLogDisplay(data.logs || []);
-                    updateStats(data.logs || []);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showError();
-                });
-        }
-
-        function updateLogDisplay(logs) {
-            const container = document.getElementById('log-container');
-
-            if (logs.length === 0) {
-                container.innerHTML = '<div class="no-logs">로그가 없습니다.</div>';
-                return;
-            }
-
-            const logsHTML = logs.map(log => {
-                const level = log.level || 'INFO';
-                const levelClass = level.toLowerCase();
-
-                return `
-                    <div class="log-entry log-${levelClass}">
-                        <span class="log-timestamp">${log.timestamp}</span>
-                        <span class="log-level ${level}">${level}</span>
-                        <span class="log-message">${escapeHtml(log.message)}</span>
-                    </div>
-                `;
-            }).join('');
-
-            container.innerHTML = logsHTML;
-
-            // 자동 스크롤
-            if (document.getElementById('auto-scroll').checked) {
-                container.scrollTop = container.scrollHeight;
-            }
-        }
-
-        function updateStats(logs) {
-            stats = { total: logs.length, error: 0, warning: 0, info: 0 };
-
-            logs.forEach(log => {
-                const level = log.level || 'INFO';
-                if (level === 'ERROR') stats.error++;
-                else if (level === 'WARNING') stats.warning++;
-                else if (level === 'INFO') stats.info++;
-            });
-
-            document.getElementById('total-logs').textContent = stats.total;
-            document.getElementById('error-count').textContent = stats.error;
-            document.getElementById('warning-count').textContent = stats.warning;
-            document.getElementById('info-count').textContent = stats.info;
-        }
-
-        function clearLogView() {
-            document.getElementById('log-container').innerHTML = '<div class="no-logs">로그가 지워졌습니다.</div>';
-            stats = { total: 0, error: 0, warning: 0, info: 0 };
-            updateStats([]);
-        }
-
-        function showError() {
-            const container = document.getElementById('log-container');
-            container.innerHTML = '<div class="no-logs" style="color: #e74c3c;">데이터를 불러오는 중 오류가 발생했습니다.</div>';
-        }
-
-        function escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, m => map[m]);
-        }
-
-        function setupAutoRefresh() {
-            const autoRefreshCheckbox = document.getElementById('auto-refresh');
-
-            if (autoRefreshCheckbox.checked) {
-                autoRefreshInterval = setInterval(loadLogs, 5000);
-            } else {
-                if (autoRefreshInterval) {
-                    clearInterval(autoRefreshInterval);
-                    autoRefreshInterval = null;
+                if (!logs || logs.length === 0) {
+                    logViewer.innerHTML = '<div style="text-align:center; padding:2rem; color:#64748b;">로그가 없습니다.</div>';
+                    return;
                 }
-            }
-        }
 
-        // 초기 로드
-        document.addEventListener('DOMContentLoaded', function () {
-            loadLogs();
-            setupAutoRefresh();
+                logs.forEach(log => {
+                    const div = document.createElement('div');
+                    div.className = 'log-entry';
 
-            // 자동 새로고침 토글
-            document.getElementById('auto-refresh').addEventListener('change', setupAutoRefresh);
+                    // 로그 파싱 (예: [2023-01-01 12:00:00] [INFO] message)
+                    // 실제 로그 형식에 따라 조정 필요
+                    let levelClass = 'level-INFO';
+                    if (log.includes('ERROR') || log.includes('CRITICAL')) levelClass = 'level-ERROR';
+                    else if (log.includes('WARNING')) levelClass = 'level-WARNING';
+                    else if (log.includes('DEBUG')) levelClass = 'level-DEBUG';
 
-            // 필터 변경 시 로그 새로고침
-            document.getElementById('log-type-filter').addEventListener('change', loadLogs);
-            document.getElementById('level-filter').addEventListener('change', loadLogs);
-            document.getElementById('limit-filter').addEventListener('change', loadLogs);
-        });
+                    div.innerHTML = `
+                        <span class="${levelClass}">${log}</span>
+                    `;
+                    logViewer.appendChild(div);
+                });
 
-        // 페이지 언로드 시 인터벌 정리
-        window.addEventListener('beforeunload', function () {
-            if (autoRefreshInterval) {
-                clearInterval(autoRefreshInterval);
-            }
-        });
-    </script>
-</body>
+                // 스크롤을 맨 아래로
+                // logViewer.scrollTop = logViewer.scrollHeight;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('log-viewer').innerHTML =
+                    '<div style="text-align:center; padding:2rem; color:#ef4444;">로그를 불러오는 중 오류가 발생했습니다.</div>';
+            });
+    }
 
-</html>
+    function clearLogs() {
+        if (!confirm('정말로 모든 로그를 삭제하시겠습니까?')) return;
+
+        fetch('/api/logs/clear', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                refreshLogs();
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        refreshLogs();
+        // 5초마다 자동 갱신
+        setInterval(refreshLogs, 5000);
+    });
+</script>
+{% endblock %}

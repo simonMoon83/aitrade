@@ -1,497 +1,73 @@
-<!DOCTYPE html>
-<html lang="ko">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>거래 이력 - AI 트레이더</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% block title %}AI 트레이더 - 거래 이력{% endblock %}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .header h1 {
-            font-size: 28px;
-            font-weight: 600;
-        }
-
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 10px 20px;
-            border: 2px solid white;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .logout-btn:hover {
-            background: white;
-            color: #667eea;
-        }
-
-        /* 네비게이션 */
-        .navbar {
-            background: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-            padding: 0;
-            margin-bottom: 20px;
-        }
-
-        .navbar ul {
-            list-style: none;
-            display: flex;
-            margin: 0;
-            padding: 0;
-        }
-
-        .navbar li {
-            flex: 1;
-        }
-
-        .navbar a {
-            display: block;
-            padding: 15px 20px;
-            text-decoration: none;
-            color: #333;
-            transition: all 0.3s;
-            text-align: center;
-            border-bottom: 3px solid transparent;
-        }
-
-        .navbar a:hover,
-        .navbar a.active {
-            background: #f8f9fa;
-            border-bottom-color: #667eea;
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 20px auto;
-            padding: 0 20px;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-
-        .card h3 {
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-
-        /* 필터 */
-        .filter-panel {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .filter-panel select,
-        .filter-panel input {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .filter-panel button {
-            background: #667eea;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .filter-panel button:hover {
-            background: #5568d3;
-        }
-
-        /* 테이블 */
-        .table-container {
-            overflow-x: auto;
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 800px;
-        }
-
-        .table th,
-        .table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-        }
-
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        .positive {
-            color: #27ae60;
-            font-weight: 600;
-        }
-
-        .negative {
-            color: #e74c3c;
-            font-weight: 600;
-        }
-
-        .buy {
-            background: #d4edda;
-            color: #155724;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-
-        .sell {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-
-        /* 페이지네이션 */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .pagination button {
-            padding: 8px 16px;
-            border: 1px solid #ddd;
-            background: white;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-
-        .pagination button:hover {
-            background: #f8f9fa;
-        }
-
-        .pagination button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .pagination .page-info {
-            color: #666;
-        }
-
-        /* Export 버튼 */
-        .export-btn {
-            background: #28a745;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .export-btn:hover {
-            background: #218838;
-        }
-
-        /* 반응형 디자인 */
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
-            }
-
-            .header h1 {
-                font-size: 22px;
-            }
-
-            /* 모바일에서도 메뉴는 가로 유지 (2줄로 표시) */
-            .navbar ul {
-                flex-wrap: wrap;
-            }
-
-            .navbar li {
-                flex: 1 1 50%;
-                min-width: 50%;
-            }
-
-            .navbar a {
-                border-bottom: 1px solid #eee;
-                border-right: 1px solid #eee;
-                padding: 12px 10px;
-                font-size: 14px;
-            }
-
-            .filter-panel {
-                flex-direction: column;
-            }
-
-            .filter-panel select,
-            .filter-panel input,
-            .filter-panel button {
-                width: 100%;
-            }
-
-            .table {
-                font-size: 12px;
-            }
-
-            .table th,
-            .table td {
-                padding: 6px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 0 10px;
-            }
-
-            .card {
-                padding: 15px;
-            }
-
-            .header h1 {
-                font-size: 18px;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="header">
-        <h1>📈 거래 이력</h1>
-        <button class="logout-btn" onclick="logout()">로그아웃</button>
+{% block content %}
+<div class="card">
+    <h3>📈 전체 거래 이력</h3>
+    <div class="table-container">
+        <table class="table" id="history-table">
+            <thead>
+                <tr>
+                    <th>시간</th>
+                    <th>종목</th>
+                    <th>유형</th>
+                    <th>수량</th>
+                    <th>가격</th>
+                    <th>총액</th>
+                    <th>손익</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 데이터가 여기에 로드됩니다 -->
+                <tr>
+                    <td colspan="7" style="text-align:center; padding: 2rem; color:#999;">데이터 로딩 중...</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
+</div>
+{% endblock %}
 
-    <!-- 네비게이션 -->
-    <nav class="navbar">
-        <ul>
-            <li><a href="/">📊 대시보드</a></li>
-            <li><a href="/history" class="active">📈 거래 이력</a></li>
-            <li><a href="/signals">🎯 AI 신호</a></li>
-            <li><a href="/reports">📋 일일 레포트</a></li>
-            <li><a href="/logs_page">📝 로그</a></li>
-            <li><a href="/settings">⚙️ 설정</a></li>
-        </ul>
-    </nav>
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/api/trades')
+            .then(response => response.json())
+            .then(data => {
+                const trades = data.trades || data;
+                const tbody = document.querySelector('#history-table tbody');
+                tbody.innerHTML = '';
 
-    <div class="container">
-        <div class="card">
-            <h3>🔍 필터</h3>
-            <div class="filter-panel">
-                <select id="symbol-filter">
-                    <option value="">전체 종목</option>
-                    <option value="AAPL">AAPL</option>
-                    <option value="MSFT">MSFT</option>
-                    <option value="GOOGL">GOOGL</option>
-                    <option value="AMZN">AMZN</option>
-                    <option value="NVDA">NVDA</option>
-                    <option value="META">META</option>
-                    <option value="TSLA">TSLA</option>
-                </select>
+                if (!trades || trades.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem; color:#999;">거래 내역이 없습니다.</td></tr>';
+                    return;
+                }
 
-                <select id="type-filter">
-                    <option value="">전체 유형</option>
-                    <option value="BUY">매수</option>
-                    <option value="SELL">매도</option>
-                </select>
+                // trades.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-                <input type="date" id="start-date" placeholder="시작일">
-                <input type="date" id="end-date" placeholder="종료일">
+                trades.forEach(trade => {
+                    const row = tbody.insertRow();
+                    const total = trade.price * trade.quantity;
+                    const pnl = trade.pnl || 0;
+                    const isBuy = trade.order_type === 'buy';
 
-                <button onclick="applyFilters()">필터 적용</button>
-                <button onclick="clearFilters()" style="background: #6c757d;">초기화</button>
-                <button class="export-btn" onclick="exportTrades()">CSV 다운로드</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3>📋 거래 내역</h3>
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>시간</th>
-                            <th>종목</th>
-                            <th>유형</th>
-                            <th>수량</th>
-                            <th>가격</th>
-                            <th>총액</th>
-                            <th>손익</th>
-                            <th>손익률</th>
-                        </tr>
-                    </thead>
-                    <tbody id="trades-tbody">
-                        <tr>
-                            <td colspan="8" style="text-align: center; padding: 40px;">데이터 로딩 중...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="pagination">
-                <button id="prev-btn" onclick="previousPage()">← 이전</button>
-                <span class="page-info" id="page-info">1 / 1</span>
-                <button id="next-btn" onclick="nextPage()">다음 →</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let currentPage = 1;
-        let totalPages = 1;
-        let currentFilters = {};
-
-        function logout() {
-            window.location.href = '/logout';
-        }
-
-        function loadTrades(page = 1) {
-            const params = new URLSearchParams({
-                page: page,
-                per_page: 50,
-                ...currentFilters
-            });
-
-            fetch(`/api/trades?${params}`)
-                .then(response => response.json())
-                .then(data => {
-                    updateTradesTable(data.trades || []);
-                    currentPage = data.page || 1;
-                    totalPages = data.pages || 1;
-                    updatePagination();
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showError();
+                    row.innerHTML = `
+                        <td style="color:#64748b;">${new Date(trade.timestamp).toLocaleString()}</td>
+                        <td style="font-weight:600;">${trade.symbol}</td>
+                        <td><span class="badge ${isBuy ? 'badge-success' : 'badge-danger'}">${trade.order_type.toUpperCase()}</span></td>
+                        <td>${trade.quantity}</td>
+                        <td>$${trade.price.toFixed(2)}</td>
+                        <td>$${total.toFixed(2)}</td>
+                        <td class="${pnl >= 0 ? 'text-success' : 'text-danger'}">${pnl ? '$' + pnl.toFixed(2) : '-'}</td>
+                    `;
                 });
-        }
-
-        function updateTradesTable(trades) {
-            const tbody = document.getElementById('trades-tbody');
-            tbody.innerHTML = '';
-
-            if (trades.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">거래 내역이 없습니다.</td></tr>';
-                return;
-            }
-
-            trades.forEach(trade => {
-                const row = tbody.insertRow();
-                const timestamp = new Date(trade.timestamp || trade.date);
-                const pnl = trade.pnl || 0;
-                const pnlPct = trade.pnl_pct || 0;
-                const total = (trade.price || 0) * (trade.quantity || 0);
-
-                row.innerHTML = `
-                    <td>${timestamp.toLocaleString('ko-KR')}</td>
-                    <td><strong>${trade.symbol || '-'}</strong></td>
-                    <td><span class="${(trade.order_type || '').toLowerCase()}">${trade.order_type || '-'}</span></td>
-                    <td>${trade.quantity || 0}</td>
-                    <td>$${(trade.price || 0).toFixed(2)}</td>
-                    <td>$${total.toFixed(2)}</td>
-                    <td class="${pnl >= 0 ? 'positive' : 'negative'}">$${pnl.toFixed(2)}</td>
-                    <td class="${pnlPct >= 0 ? 'positive' : 'negative'}">${pnlPct.toFixed(2)}%</td>
-                `;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.querySelector('#history-table tbody').innerHTML =
+                    '<tr><td colspan="7" style="text-align:center; color:red;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
             });
-        }
-
-        function updatePagination() {
-            document.getElementById('page-info').textContent = `${currentPage} / ${totalPages}`;
-            document.getElementById('prev-btn').disabled = currentPage <= 1;
-            document.getElementById('next-btn').disabled = currentPage >= totalPages;
-        }
-
-        function previousPage() {
-            if (currentPage > 1) {
-                loadTrades(currentPage - 1);
-            }
-        }
-
-        function nextPage() {
-            if (currentPage < totalPages) {
-                loadTrades(currentPage + 1);
-            }
-        }
-
-        function applyFilters() {
-            currentFilters = {};
-
-            const symbol = document.getElementById('symbol-filter').value;
-            const type = document.getElementById('type-filter').value;
-            const startDate = document.getElementById('start-date').value;
-            const endDate = document.getElementById('end-date').value;
-
-            if (symbol) currentFilters.symbol = symbol;
-            if (type) currentFilters.order_type = type;
-            if (startDate) currentFilters.start_date = startDate;
-            if (endDate) currentFilters.end_date = endDate;
-
-            loadTrades(1);
-        }
-
-        function clearFilters() {
-            document.getElementById('symbol-filter').value = '';
-            document.getElementById('type-filter').value = '';
-            document.getElementById('start-date').value = '';
-            document.getElementById('end-date').value = '';
-            currentFilters = {};
-            loadTrades(1);
-        }
-
-        function exportTrades() {
-            window.location.href = '/api/export/trades';
-        }
-
-        function showError() {
-            const tbody = document.getElementById('trades-tbody');
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #e74c3c;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
-        }
-
-        // 초기 로드
-        document.addEventListener('DOMContentLoaded', function () {
-            loadTrades(1);
-
-            // 30초마다 자동 새로고침
-            setInterval(() => loadTrades(currentPage), 30000);
-        });
-    </script>
-</body>
-
-</html>
+    });
+</script>
+{% endblock %}

@@ -1,703 +1,575 @@
-<!DOCTYPE html>
-<html lang="ko">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 트레이더 설정</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+{% block title %}AI 트레이더 - 설정 (v0.2.1){% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 종목 카드 그리드 */
+    .symbol-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+        min-height: 50px;
+    }
+
+    .symbol-card {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.25rem;
+        position: relative;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .symbol-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md);
+        border-color: #667eea;
+    }
+
+    .symbol-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .symbol-name {
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: #333;
+        letter-spacing: 0.5px;
+    }
+
+    .like-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.5rem;
+        color: #e0e0e0;
+        transition: transform 0.2s, color 0.2s;
+        padding: 0;
+        line-height: 1;
+    }
+
+    .like-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .like-btn.active {
+        color: #ff4757;
+    }
+
+    .symbol-price-box {
+        margin-top: auto;
+    }
+
+    .symbol-price {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+        letter-spacing: -0.5px;
+    }
+
+    .symbol-change {
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .up {
+        color: #27ae60;
+    }
+
+    .down {
+        color: #e74c3c;
+    }
+
+    .neutral {
+        color: #7f8c8d;
+    }
+
+    .search-box {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 1.5rem;
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 1rem;
+        outline: none;
+        transition: border 0.3s;
+    }
+
+    .search-input:focus {
+        border-color: #667eea;
+    }
+
+    .section-desc {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-bottom: 1.25rem;
+        line-height: 1.5;
+    }
+
+    /* 단기 설정 스타일 */
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-top: 0.25rem;
+    }
+
+    input[type="number"],
+    textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-family: inherit;
+    }
+
+    textarea {
+        height: 80px;
+        resize: vertical;
+    }
+
+    .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 1.25rem;
+    }
+
+    .checkbox-wrapper input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: #667eea;
+    }
+
+    .checkbox-wrapper label {
+        margin-bottom: 0;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1100;
+        box-shadow: var(--shadow-lg);
+        min-width: 300px;
+        text-align: center;
+        font-weight: 500;
+    }
+
+    .alert.success {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .alert.error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border-top-color: #667eea;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
         }
+    }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
-        }
+    .empty-message {
+        text-align: center;
+        padding: 2.5rem;
+        color: #94a3b8;
+        font-style: italic;
+        background: #f9f9f9;
+        border-radius: 8px;
+        grid-column: 1 / -1;
+    }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+    .version-tag {
+        font-size: 0.75rem;
+        color: #cbd5e1;
+        text-align: right;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
 
-        .header h1 {
-            font-size: 28px;
-            font-weight: 600;
-        }
+{% block content %}
+<div id="alert-box" class="alert"></div>
 
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 10px 20px;
-            border: 2px solid white;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+<!-- 장기 투자 섹션 -->
+<div class="card">
+    <h3>
+        💖 장기 투자 관심 종목
+        <span id="loading-indicator" style="display:none; margin-left:10px;">
+            <div class="loading-spinner"></div>
+        </span>
+    </h3>
+    <p class="section-desc">
+        여기에 등록된 종목들은 <strong>장기 보유 목적</strong>으로 관리되며, 시스템의 단기 트레이딩 대상에서 제외됩니다.<br>
+        하트(♥)를 클릭하여 관심 종목을 추가하거나 제거하세요.
+    </p>
 
-        .logout-btn:hover {
-            background: white;
-            color: #667eea;
-        }
-
-        /* 네비게이션 */
-        .navbar {
-            background: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-            padding: 0;
-            margin-bottom: 20px;
-        }
-
-        .navbar ul {
-            list-style: none;
-            display: flex;
-            margin: 0;
-            padding: 0;
-        }
-
-        .navbar li {
-            flex: 1;
-        }
-
-        .navbar a {
-            display: block;
-            padding: 15px 20px;
-            text-decoration: none;
-            color: #333;
-            transition: all 0.3s;
-            text-align: center;
-            border-bottom: 3px solid transparent;
-        }
-
-        .navbar a:hover,
-        .navbar a.active {
-            background: #f8f9fa;
-            border-bottom-color: #667eea;
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 20px auto;
-            padding: 0 20px;
-        }
-
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-
-        .card h3 {
-            margin-bottom: 20px;
-            color: #2c3e50;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* 종목 카드 그리드 */
-        .symbol-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 15px;
-            margin-bottom: 10px;
-        }
-
-        .symbol-card {
-            background: white;
-            border: 1px solid #eee;
-            border-radius: 12px;
-            padding: 20px;
-            position: relative;
-            transition: all 0.2s;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .symbol-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-            border-color: #667eea;
-        }
-
-        .symbol-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-
-        .symbol-name {
-            font-weight: 700;
-            font-size: 20px;
-            color: #333;
-            letter-spacing: 0.5px;
-        }
-
-        .like-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 24px;
-            color: #e0e0e0;
-            transition: transform 0.2s, color 0.2s;
-            padding: 0;
-            line-height: 1;
-        }
-
-        .like-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .like-btn.active {
-            color: #ff4757;
-        }
-
-        .symbol-price-box {
-            margin-top: auto;
-        }
-
-        .symbol-price {
-            font-size: 28px;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 5px;
-            letter-spacing: -0.5px;
-        }
-
-        .symbol-change {
-            font-size: 15px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .up {
-            color: #27ae60;
-        }
-
-        .down {
-            color: #e74c3c;
-        }
-
-        .neutral {
-            color: #7f8c8d;
-        }
-
-        .search-box {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-        }
-
-        .search-input {
-            flex: 1;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
-            outline: none;
-            transition: border 0.3s;
-        }
-
-        .search-input:focus {
-            border-color: #667eea;
-        }
-
-        .add-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 0 25px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.3s;
-        }
-
-        .add-btn:hover {
-            background: #5a6fd6;
-        }
-
-        .section-desc {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 20px;
-            line-height: 1.5;
-        }
-
-        /* 단기 설정 스타일 */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .form-text {
-            font-size: 13px;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        input[type="number"],
-        textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        textarea {
-            height: 80px;
-            resize: vertical;
-        }
-
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .checkbox-wrapper input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-
-        .checkbox-wrapper label {
-            margin-bottom: 0;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .btn-save {
-            background: #27ae60;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-            transition: background 0.3s;
-            margin-top: 10px;
-        }
-
-        .btn-save:hover {
-            background: #219150;
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            min-width: 300px;
-            text-align: center;
-        }
-
-        .alert.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(0, 0, 0, 0.1);
-            border-radius: 50%;
-            border-top-color: #667eea;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .empty-message {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-            font-style: italic;
-            background: #f9f9f9;
-            border-radius: 8px;
-            grid-column: 1 / -1;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="header">
-        <h1>🤖 AI 주식 트레이더 설정</h1>
-        <button class="logout-btn" onclick="logout()">로그아웃</button>
+    <div class="search-box">
+        <input type="text" id="symbol-search" class="search-input" placeholder="종목 코드 입력 (예: AAPL, TSLA)"
+            onkeypress="handleEnter(event)">
+        <button class="btn btn-primary" onclick="addSymbolFromSearch()">추가</button>
     </div>
 
-    <nav class="navbar">
-        <ul>
-            <li><a href="/">📊 대시보드</a></li>
-            <li><a href="/history">📈 거래 이력</a></li>
-            <li><a href="/signals">🎯 AI 신호</a></li>
-            <li><a href="/reports">📋 일일 레포트</a></li>
-            <li><a href="/logs_page">📝 로그</a></li>
-            <li><a href="/settings" class="active">⚙️ 설정</a></li>
-        </ul>
-    </nav>
+    <div id="my-symbols" class="symbol-grid">
+        <!-- 내 종목 카드들이 여기에 렌더링됩니다 -->
+    </div>
+</div>
 
-    <div class="container">
-        <div id="alert-box" class="alert"></div>
+<!-- 추천 종목 섹션 -->
+<div class="card" id="recommended-card">
+    <h3>🔥 인기 / 추천 종목</h3>
+    <p class="section-desc">시장에서 주목받는 주요 기술주 및 ETF입니다. 클릭하여 내 관심 종목에 추가해보세요.</p>
+    <div id="recommended-symbols" class="symbol-grid">
+        <!-- 추천 종목 카드들이 여기에 렌더링됩니다 -->
+    </div>
+</div>
 
-        <!-- 장기 투자 섹션 -->
-        <div class="card">
-            <h3>💖 장기 투자 관심 종목 <span id="loading-indicator" style="display:none; margin-left:10px;">
-                    <div class="loading-spinner"></div>
-                </span></h3>
-            <p class="section-desc">
-                여기에 등록된 종목들은 <strong>장기 보유 목적</strong>으로 관리되며, 시스템의 단기 트레이딩 대상에서 제외됩니다.<br>
-                하트(♥)를 클릭하여 관심 종목을 추가하거나 제거하세요.
-            </p>
+<!-- 단기 투자 설정 섹션 -->
+<div class="card">
+    <h3>⚡ 시스템 단기 트레이딩 설정</h3>
+    <p class="section-desc">시스템이 시장 상황을 분석하여 자동으로 단기 매매를 수행할지 설정합니다.</p>
 
-            <div class="search-box">
-                <input type="text" id="symbol-search" class="search-input" placeholder="종목 코드 입력 (예: AAPL, TSLA)"
-                    onkeypress="handleEnter(event)">
-                <button class="add-btn" onclick="addSymbolFromSearch()">추가</button>
-            </div>
-
-            <div id="my-symbols" class="symbol-grid">
-                <!-- 내 종목 카드들이 여기에 렌더링됩니다 -->
-            </div>
-        </div>
-
-        <!-- 추천 종목 섹션 -->
-        <div class="card">
-            <h3>🔥 인기 / 추천 종목</h3>
-            <p class="section-desc">시장에서 주목받는 주요 기술주 및 ETF입니다. 클릭하여 내 관심 종목에 추가해보세요.</p>
-            <div id="recommended-symbols" class="symbol-grid">
-                <!-- 추천 종목 카드들이 여기에 렌더링됩니다 -->
-            </div>
-        </div>
-
-        <!-- 단기 투자 설정 섹션 -->
-        <div class="card">
-            <h3>⚡ 시스템 단기 트레이딩 설정</h3>
-            <p class="section-desc">시스템이 시장 상황을 분석하여 자동으로 단기 매매를 수행할지 설정합니다.</p>
-
-            <div class="checkbox-wrapper">
-                <input type="checkbox" id="short-term-enabled">
-                <label for="short-term-enabled">시스템 자동 단기 트레이딩 활성화</label>
-            </div>
-
-            <div id="short-term-options" style="display: none; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-                <div class="form-group">
-                    <label for="short-term-count">최대 운용 종목 수</label>
-                    <input type="number" id="short-term-count" min="1" max="10" value="3">
-                    <div class="form-text">동시에 보유할 단기 투자 종목의 최대 개수입니다.</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="short-term-candidates">단기 투자 후보군 (시스템 선택 풀)</label>
-                    <textarea id="short-term-candidates" placeholder="예: NVDA, AMD, PLTR..."></textarea>
-                    <div class="form-text">시스템이 모니터링할 후보 종목들입니다. (장기 투자 종목과 중복 시 자동으로 제외됨)</div>
-                </div>
-
-                <button class="btn-save" onclick="saveShortTermSettings()">단기 설정 저장</button>
-            </div>
-        </div>
+    <div class="checkbox-wrapper">
+        <input type="checkbox" id="short-term-enabled">
+        <label for="short-term-enabled">시스템 자동 단기 트레이딩 활성화</label>
     </div>
 
-    <script>
-        // 전역 상태
-        let currentSettings = {
-            long_term_symbols: [],
-            short_term_enabled: false,
-            short_term_pool_size: 3,
-            short_term_candidates: []
-        };
+    <div id="short-term-options" style="display: none; padding: 1.5rem; background: #f8f9fa; border-radius: 8px;">
+        <div class="form-group">
+            <label for="short-term-count">최대 운용 종목 수</label>
+            <input type="number" id="short-term-count" min="1" max="10" value="3">
+            <div class="form-text">동시에 보유할 단기 투자 종목의 최대 개수입니다.</div>
+        </div>
 
-        // 추천 종목 리스트 (기본값)
-        const RECOMMENDED_SYMBOLS = [
-            'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', // Mag 7
-            'AMD', 'INTC', 'QCOM', // 반도체
-            'SPY', 'QQQ', 'IWM',   // 지수 ETF
-            'PLTR', 'IONQ', 'SOFI' // 성장주
-        ];
+        <div class="form-group">
+            <label for="short-term-candidates">단기 투자 후보군 (시스템 선택 풀)</label>
+            <textarea id="short-term-candidates" placeholder="예: NVDA, AMD, PLTR..."></textarea>
+            <div class="form-text">시스템이 모니터링할 후보 종목들입니다. (장기 투자 종목과 중복 시 자동으로 제외됨)</div>
+        </div>
 
-        // 시세 데이터 캐시
-        let marketQuotes = {};
+        <button class="btn btn-success" style="width:100%; margin-top:0.5rem;" onclick="saveShortTermSettings()">단기 설정
+            저장</button>
+    </div>
+</div>
 
-        function logout() {
-            window.location.href = '/logout';
+<div class="version-tag">UI Version: 0.2.1</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 전역 상태
+    let currentSettings = {
+        long_term_symbols: [],
+        short_term_enabled: false,
+        short_term_pool_size: 3,
+        short_term_candidates: []
+    };
+
+    // 추천 종목 리스트 (기본값)
+    const RECOMMENDED_SYMBOLS = [
+        'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', // Mag 7
+        'AMD', 'INTC', 'QCOM', // 반도체
+        'SPY', 'QQQ', 'IWM',   // 지수 ETF
+        'PLTR', 'IONQ', 'SOFI' // 성장주
+    ];
+
+    // 시세 데이터 캐시
+    let marketQuotes = {};
+
+    function handleEnter(event) {
+        if (event.key === 'Enter') {
+            addSymbolFromSearch();
         }
+    }
 
-        function handleEnter(event) {
-            if (event.key === 'Enter') {
-                addSymbolFromSearch();
-            }
-        }
+    // 초기 로드
+    document.addEventListener('DOMContentLoaded', async function () {
+        console.log("Settings Page Loaded v0.2.1");
+        await loadSettings();
+        await fetchMarketData();
+        renderAll();
 
-        // 초기 로드
-        document.addEventListener('DOMContentLoaded', async function () {
-            await loadSettings();
-            await fetchMarketData();
-            renderAll();
-
-            // 단기 설정 토글 이벤트
-            document.getElementById('short-term-enabled').addEventListener('change', function () {
+        // 단기 설정 토글 이벤트
+        const checkbox = document.getElementById('short-term-enabled');
+        if (checkbox) {
+            checkbox.addEventListener('change', function () {
                 const options = document.getElementById('short-term-options');
                 options.style.display = this.checked ? 'block' : 'none';
             });
-
-            // 주기적 시세 업데이트 (30초)
-            setInterval(async () => {
-                await fetchMarketData();
-                renderAll();
-            }, 30000);
-        });
-
-        // 설정 로드
-        async function loadSettings() {
-            try {
-                const response = await fetch('/api/settings');
-                const data = await response.json();
-                currentSettings = data;
-
-                // 단기 설정 UI 업데이트
-                document.getElementById('short-term-enabled').checked = data.short_term_enabled;
-                document.getElementById('short-term-count').value = data.short_term_pool_size;
-                document.getElementById('short-term-candidates').value = data.short_term_candidates.join(', ');
-                document.getElementById('short-term-options').style.display = data.short_term_enabled ? 'block' : 'none';
-
-            } catch (error) {
-                showAlert('설정 로드 실패: ' + error, 'error');
-            }
         }
 
-        // 시세 데이터 조회
-        async function fetchMarketData() {
-            const loading = document.getElementById('loading-indicator');
-            loading.style.display = 'inline-block';
-
-            try {
-                // 내 종목 + 추천 종목 합치기
-                const allSymbols = [...new Set([...currentSettings.long_term_symbols, ...RECOMMENDED_SYMBOLS])];
-
-                const response = await fetch('/api/market/quotes', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ symbols: allSymbols })
-                });
-
-                const data = await response.json();
-                marketQuotes = data;
-
-            } catch (error) {
-                console.error('시세 조회 실패:', error);
-            } finally {
-                loading.style.display = 'none';
-            }
-        }
-
-        // 전체 렌더링
-        function renderAll() {
-            renderMySymbols();
-            renderRecommendedSymbols();
-        }
-
-        // 내 종목 렌더링
-        function renderMySymbols() {
-            const container = document.getElementById('my-symbols');
-            container.innerHTML = '';
-
-            if (currentSettings.long_term_symbols.length === 0) {
-                container.innerHTML = '<div class="empty-message">등록된 장기 투자 종목이 없습니다.<br>아래 추천 목록에서 선택하거나 검색하여 추가하세요.</div>';
-                return;
-            }
-
-            currentSettings.long_term_symbols.forEach(symbol => {
-                const card = createSymbolCard(symbol, true);
-                container.appendChild(card);
-            });
-        }
-
-        // 추천 종목 렌더링
-        function renderRecommendedSymbols() {
-            const container = document.getElementById('recommended-symbols');
-            container.innerHTML = '';
-
-            // 이미 내 종목에 있는 것은 제외하고 표시할 수도 있지만, 
-            // 여기서는 상태를 보여주기 위해 모두 표시하되 하트 상태만 다르게 함
-            // 또는 내 종목에 없는 것만 표시할 수도 있음 -> 사용자 경험상 없는 것만 보여주는게 깔끔할 수 있음
-            // 하지만 "인기 종목" 섹션의 의미를 살리기 위해 다 보여주고 하트만 채워진 상태로 두는 것이 좋음
-
-            const symbolsToShow = RECOMMENDED_SYMBOLS.filter(s => !currentSettings.long_term_symbols.includes(s));
-
-            if (symbolsToShow.length === 0) {
-                container.innerHTML = '<div class="empty-message">모든 추천 종목이 이미 관심 목록에 있습니다! 👍</div>';
-                return;
-            }
-
-            symbolsToShow.forEach(symbol => {
-                const card = createSymbolCard(symbol, false);
-                container.appendChild(card);
-            });
-        }
-
-        // 카드 생성 헬퍼
-        function createSymbolCard(symbol, isLiked) {
-            const quote = marketQuotes[symbol] || { price: 0, change: 0, change_percent: 0 };
-            const isUp = quote.change >= 0;
-            const colorClass = quote.change > 0 ? 'up' : (quote.change < 0 ? 'down' : 'neutral');
-            const sign = quote.change > 0 ? '+' : '';
-
-            const div = document.createElement('div');
-            div.className = 'symbol-card';
-            div.innerHTML = `
-                <div class="symbol-header">
-                    <div class="symbol-name">${symbol}</div>
-                    <button class="like-btn ${isLiked ? 'active' : ''}" onclick="toggleLike('${symbol}')">
-                        ${isLiked ? '♥' : '♡'}
-                    </button>
-                </div>
-                <div class="symbol-price-box">
-                    <div class="symbol-price">$${quote.price.toFixed(2)}</div>
-                    <div class="symbol-change ${colorClass}">
-                        ${sign}${quote.change.toFixed(2)} (${sign}${quote.change_percent.toFixed(2)}%)
-                    </div>
-                </div>
-            `;
-            return div;
-        }
-
-        // 검색으로 추가
-        async function addSymbolFromSearch() {
-            const input = document.getElementById('symbol-search');
-            const symbol = input.value.trim().toUpperCase();
-
-            if (!symbol) return;
-
-            if (currentSettings.long_term_symbols.includes(symbol)) {
-                showAlert('이미 등록된 종목입니다.', 'error');
-                return;
-            }
-
-            // 시세 확인하여 유효한 종목인지 체크 (선택사항)
-            // 여기서는 일단 추가하고 시세 조회 시도
-
-            await toggleLike(symbol);
-            input.value = '';
-
-            // 새 종목 시세 즉시 조회
+        // 주기적 시세 업데이트 (30초)
+        setInterval(async () => {
             await fetchMarketData();
             renderAll();
+        }, 30000);
+    });
+
+    // 설정 로드
+    async function loadSettings() {
+        try {
+            const response = await fetch('/api/settings');
+            const data = await response.json();
+            currentSettings = data;
+            console.log("Settings loaded:", currentSettings);
+
+            // 단기 설정 UI 업데이트
+            const checkbox = document.getElementById('short-term-enabled');
+            if (checkbox) checkbox.checked = data.short_term_enabled;
+
+            const countInput = document.getElementById('short-term-count');
+            if (countInput) countInput.value = data.short_term_pool_size;
+
+            const candidatesInput = document.getElementById('short-term-candidates');
+            if (candidatesInput) candidatesInput.value = data.short_term_candidates.join(', ');
+
+            const options = document.getElementById('short-term-options');
+            if (options) options.style.display = data.short_term_enabled ? 'block' : 'none';
+
+        } catch (error) {
+            console.error("Error loading settings:", error);
+            showAlert('설정 로드 실패: ' + error, 'error');
+        }
+    }
+
+    // 시세 데이터 조회
+    async function fetchMarketData() {
+        const loading = document.getElementById('loading-indicator');
+        if (loading) loading.style.display = 'inline-block';
+
+        try {
+            // 내 종목 + 추천 종목 합치기
+            const allSymbols = [...new Set([...currentSettings.long_term_symbols, ...RECOMMENDED_SYMBOLS])];
+
+            const response = await fetch('/api/market/quotes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ symbols: allSymbols })
+            });
+
+            const data = await response.json();
+            marketQuotes = data;
+            console.log("Market quotes loaded:", Object.keys(marketQuotes).length);
+
+        } catch (error) {
+            console.error('시세 조회 실패:', error);
+        } finally {
+            if (loading) loading.style.display = 'none';
+        }
+    }
+
+    // 전체 렌더링
+    function renderAll() {
+        renderMySymbols();
+        renderRecommendedSymbols();
+    }
+
+    // 내 종목 렌더링
+    function renderMySymbols() {
+        const container = document.getElementById('my-symbols');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (currentSettings.long_term_symbols.length === 0) {
+            container.innerHTML = '<div class="empty-message">등록된 장기 투자 종목이 없습니다.<br>아래 추천 목록에서 선택하거나 검색하여 추가하세요.</div>';
+            return;
         }
 
-        // 좋아요 토글 (핵심 기능)
-        async function toggleLike(symbol) {
-            const index = currentSettings.long_term_symbols.indexOf(symbol);
+        currentSettings.long_term_symbols.forEach(symbol => {
+            const card = createSymbolCard(symbol, true);
+            container.appendChild(card);
+        });
+    }
 
-            if (index === -1) {
-                // 추가
-                currentSettings.long_term_symbols.push(symbol);
-                showAlert(`${symbol} 종목이 추가되었습니다.`, 'success');
-            } else {
-                // 제거
-                currentSettings.long_term_symbols.splice(index, 1);
-                showAlert(`${symbol} 종목이 제거되었습니다.`, 'success'); // info 대신 success 사용 (일관성)
+    // 추천 종목 렌더링
+    function renderRecommendedSymbols() {
+        const container = document.getElementById('recommended-symbols');
+        if (!container) {
+            console.error("Recommended symbols container not found!");
+            return;
+        }
+        container.innerHTML = '';
+
+        const symbolsToShow = RECOMMENDED_SYMBOLS.filter(s => !currentSettings.long_term_symbols.includes(s));
+        console.log("Symbols to show in recommended:", symbolsToShow);
+
+        if (symbolsToShow.length === 0) {
+            container.innerHTML = '<div class="empty-message">모든 추천 종목이 이미 관심 목록에 있습니다! 👍</div>';
+            return;
+        }
+
+        symbolsToShow.forEach(symbol => {
+            const card = createSymbolCard(symbol, false);
+            container.appendChild(card);
+        });
+    }
+
+    // 카드 생성 헬퍼
+    function createSymbolCard(symbol, isLiked) {
+        const quote = marketQuotes[symbol] || { price: 0, change: 0, change_percent: 0 };
+        const isUp = quote.change >= 0;
+        const colorClass = quote.change > 0 ? 'up' : (quote.change < 0 ? 'down' : 'neutral');
+        const sign = quote.change > 0 ? '+' : '';
+
+        const div = document.createElement('div');
+        div.className = 'symbol-card';
+        div.innerHTML = `
+            <div class="symbol-header">
+                <div class="symbol-name">${symbol}</div>
+                <button class="like-btn ${isLiked ? 'active' : ''}" onclick="toggleLike('${symbol}')">
+                    ${isLiked ? '♥' : '♡'}
+                </button>
+            </div>
+            <div class="symbol-price-box">
+                <div class="symbol-price">$${quote.price.toFixed(2)}</div>
+                <div class="symbol-change ${colorClass}">
+                    ${sign}${quote.change.toFixed(2)} (${sign}${quote.change_percent.toFixed(2)}%)
+                </div>
+            </div>
+        `;
+        return div;
+    }
+
+    // 검색으로 추가
+    async function addSymbolFromSearch() {
+        const input = document.getElementById('symbol-search');
+        const symbol = input.value.trim().toUpperCase();
+
+        if (!symbol) return;
+
+        if (currentSettings.long_term_symbols.includes(symbol)) {
+            showAlert('이미 등록된 종목입니다.', 'error');
+            return;
+        }
+
+        await toggleLike(symbol);
+        input.value = '';
+
+        // 새 종목 시세 즉시 조회
+        await fetchMarketData();
+        renderAll();
+    }
+
+    // 좋아요 토글 (핵심 기능)
+    async function toggleLike(symbol) {
+        const index = currentSettings.long_term_symbols.indexOf(symbol);
+
+        if (index === -1) {
+            // 추가
+            currentSettings.long_term_symbols.push(symbol);
+            showAlert(`${symbol} 종목이 추가되었습니다.`, 'success');
+        } else {
+            // 제거
+            currentSettings.long_term_symbols.splice(index, 1);
+            showAlert(`${symbol} 종목이 제거되었습니다.`, 'success');
+        }
+
+        // 즉시 저장
+        await saveSettingsToServer();
+
+        // UI 갱신
+        renderAll();
+    }
+
+    // 단기 설정 저장
+    async function saveShortTermSettings() {
+        currentSettings.short_term_enabled = document.getElementById('short-term-enabled').checked;
+        currentSettings.short_term_pool_size = parseInt(document.getElementById('short-term-count').value);
+
+        currentSettings.short_term_candidates = document.getElementById('short-term-candidates').value
+            .split(',')
+            .map(s => s.trim().toUpperCase())
+            .filter(s => s.length > 0);
+
+        await saveSettingsToServer();
+        showAlert('단기 트레이딩 설정이 저장되었습니다.', 'success');
+    }
+
+    // 서버에 설정 저장
+    async function saveSettingsToServer() {
+        try {
+            const response = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(currentSettings)
+            });
+
+            const data = await response.json();
+            if (data.status !== 'success') {
+                throw new Error(data.message);
             }
-
-            // 즉시 저장
-            await saveSettingsToServer();
-
-            // UI 갱신
-            renderAll();
+        } catch (error) {
+            showAlert('저장 실패: ' + error, 'error');
         }
+    }
 
-        // 단기 설정 저장
-        async function saveShortTermSettings() {
-            currentSettings.short_term_enabled = document.getElementById('short-term-enabled').checked;
-            currentSettings.short_term_pool_size = parseInt(document.getElementById('short-term-count').value);
+    function showAlert(message, type) {
+        const alertBox = document.getElementById('alert-box');
+        if (!alertBox) return;
+        alertBox.textContent = message;
+        alertBox.className = 'alert ' + type;
+        alertBox.style.display = 'block';
 
-            currentSettings.short_term_candidates = document.getElementById('short-term-candidates').value
-                .split(',')
-                .map(s => s.trim().toUpperCase())
-                .filter(s => s.length > 0);
-
-            await saveSettingsToServer();
-            showAlert('단기 트레이딩 설정이 저장되었습니다.', 'success');
-        }
-
-        // 서버에 설정 저장
-        async function saveSettingsToServer() {
-            try {
-                const response = await fetch('/api/settings', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(currentSettings)
-                });
-
-                const data = await response.json();
-                if (data.status !== 'success') {
-                    throw new Error(data.message);
-                }
-            } catch (error) {
-                showAlert('저장 실패: ' + error, 'error');
-                // 실패 시 롤백 로직이 필요할 수 있으나 여기서는 생략
-            }
-        }
-
-        function showAlert(message, type) {
-            const alertBox = document.getElementById('alert-box');
-            alertBox.textContent = message;
-            alertBox.className = 'alert ' + type;
-            alertBox.style.display = 'block';
-
-            setTimeout(() => {
-                alertBox.style.display = 'none';
-            }, 3000);
-        }
-    </script>
-</body>
-
-</html>
+        setTimeout(() => {
+            alertBox.style.display = 'none';
+        }, 3000);
+    }
+</script>
+{% endblock %}

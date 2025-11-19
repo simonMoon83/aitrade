@@ -73,25 +73,25 @@ def load_user(user_id):
 @login_required
 def index():
     """메인 대시보드"""
-    return render_template('dashboard.html')
+    return render_template('dashboard.html', active_page='dashboard')
 
 @app.route('/history')
 @login_required
 def history():
     """거래 이력 페이지"""
-    return render_template('history.html')
+    return render_template('history.html', active_page='history')
 
 @app.route('/signals')
 @login_required
 def signals_page():
     """AI 신호 분석 페이지"""
-    return render_template('signals.html')
+    return render_template('signals.html', active_page='signals')
 
 @app.route('/logs_page')
 @login_required
 def logs_page():
     """로그 뷰어 페이지"""
-    return render_template('logs.html')
+    return render_template('logs.html', active_page='logs')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -121,13 +121,13 @@ def logout():
 @login_required
 def reports_page():
     """일일 레포트 페이지"""
-    return render_template('reports.html')
+    return render_template('reports.html', active_page='reports')
 
 @app.route('/settings')
 @login_required
 def settings_page():
     """설정 페이지"""
-    return render_template('settings.html')
+    return render_template('settings.html', active_page='settings')
 
 @app.route('/api/portfolio')
 @login_required
