@@ -92,15 +92,27 @@
                     const div = document.createElement('div');
                     div.className = 'log-entry';
 
-                    // 로그 파싱 (예: [2023-01-01 12:00:00] [INFO] message)
-                    // 실제 로그 형식에 따라 조정 필요
                     let levelClass = 'level-INFO';
-                    if (log.includes('ERROR') || log.includes('CRITICAL')) levelClass = 'level-ERROR';
-                    else if (log.includes('WARNING')) levelClass = 'level-WARNING';
-                    else if (log.includes('DEBUG')) levelClass = 'level-DEBUG';
+                    let logContent = '';
+
+                    if (typeof log === 'object') {
+                        // 객체로 반환된 경우
+                        const level = log.level || 'INFO';
+                        if (level === 'ERROR' || level === 'CRITICAL') levelClass = 'level-ERROR';
+                        else if (level === 'WARNING') levelClass = 'level-WARNING';
+                        else if (level === 'DEBUG') levelClass = 'level-DEBUG';
+
+                        logContent = log.full || `[${log.timestamp}] [${level}] ${log.message}`;
+                    } else {
+                        // 문자열로 반환된 경우 (구버전 호환)
+                        logContent = log;
+                        if (log.includes('ERROR') || log.includes('CRITICAL')) levelClass = 'level-ERROR';
+                        else if (log.includes('WARNING')) levelClass = 'level-WARNING';
+                        else if (log.includes('DEBUG')) levelClass = 'level-DEBUG';
+                    }
 
                     div.innerHTML = `
-                        <span class="${levelClass}">${log}</span>
+                        <span class="${levelClass}">${logContent}</span>
                     `;
                     logViewer.appendChild(div);
                 });
