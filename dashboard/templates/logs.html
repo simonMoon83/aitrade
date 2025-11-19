@@ -43,127 +43,127 @@
 
 {% block content %}
 <div class="card">
-    <div class="header-actions"
-        style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap: wrap; gap: 1rem;">
-        <h3>📝 시스템 로그</h3>
-        <div class="btn-group" style="flex-wrap: wrap;">
-            <button class="btn btn-info" onclick="refreshLogs()">
-                <span>🔄</span>
-                <span>새로고침</span>
-            </button>
-            <button class="btn btn-danger" onclick="clearLogs()">
-                <span>🗑️</span>
-                <span>로그 지우기</span>
-            </button>
+    <div class="card">
+        <div class="card-header">
+            <h3>📝 시스템 로그</h3>
+            <div class="btn-group" style="flex-wrap: wrap;">
+                <button class="btn btn-info" onclick="refreshLogs()">
+                    <span>🔄</span>
+                    <span>새로고침</span>
+                </button>
+                <button class="btn btn-danger" onclick="clearLogs()">
+                    <span>🗑️</span>
+                    <span>로그 지우기</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-group">
+                <label for="filter-log-type">로그 유형</label>
+                <select id="filter-log-type" onchange="refreshLogs()">
+                    <option value="paper_trader">Paper Trader</option>
+                    <option value="web_dashboard">Web Dashboard</option>
+                    <option value="data_collector">Data Collector</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filter-log-level">로그 레벨</label>
+                <select id="filter-log-level" onchange="refreshLogs()">
+                    <option value="ALL">전체</option>
+                    <option value="DEBUG">DEBUG</option>
+                    <option value="INFO">INFO</option>
+                    <option value="WARNING">WARNING</option>
+                    <option value="ERROR">ERROR</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filter-limit">표시 개수</label>
+                <select id="filter-limit" onchange="refreshLogs()">
+                    <option value="50">50개</option>
+                    <option value="100" selected>100개</option>
+                    <option value="200">200개</option>
+                    <option value="500">500개</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="log-viewer" class="log-container">
+            <div style="text-align:center; padding:2rem; color:#64748b;">로그 로딩 중...</div>
         </div>
     </div>
+    {% endblock %}
 
-    <!-- Filter Section -->
-    <div class="filter-section">
-        <div class="filter-group">
-            <label for="filter-log-type">로그 유형</label>
-            <select id="filter-log-type" onchange="refreshLogs()">
-                <option value="paper_trader">Paper Trader</option>
-                <option value="web_dashboard">Web Dashboard</option>
-                <option value="data_collector">Data Collector</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label for="filter-log-level">로그 레벨</label>
-            <select id="filter-log-level" onchange="refreshLogs()">
-                <option value="ALL">전체</option>
-                <option value="DEBUG">DEBUG</option>
-                <option value="INFO">INFO</option>
-                <option value="WARNING">WARNING</option>
-                <option value="ERROR">ERROR</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label for="filter-limit">표시 개수</label>
-            <select id="filter-limit" onchange="refreshLogs()">
-                <option value="50">50개</option>
-                <option value="100" selected>100개</option>
-                <option value="200">200개</option>
-                <option value="500">500개</option>
-            </select>
-        </div>
-    </div>
+    {% block extra_js %}
+    <script>
+        function refreshLogs() {
+            const logType = document.getElementById('filter-log-type').value;
+            const logLevel = document.getElementById('filter-log-level').value;
+            const limit = document.getElementById('filter-limit').value;
 
-    <div id="log-viewer" class="log-container">
-        <div style="text-align:center; padding:2rem; color:#64748b;">로그 로딩 중...</div>
-    </div>
-</div>
-{% endblock %}
+            fetch(`/api/logs?type=${logType}&level=${logLevel}&limit=${limit}`)
+                .then(response => response.json())
+                .then(data => {
+                    const logViewer = document.getElementById('log-viewer');
+                    logViewer.innerHTML = '';
 
-{% block extra_js %}
-<script>
-    function refreshLogs() {
-        const logType = document.getElementById('filter-log-type').value;
-        const logLevel = document.getElementById('filter-log-level').value;
-        const limit = document.getElementById('filter-limit').value;
+                    const logs = data.logs || data;
 
-        fetch(`/api/logs?type=${logType}&level=${logLevel}&limit=${limit}`)
-            .then(response => response.json())
-            .then(data => {
-                const logViewer = document.getElementById('log-viewer');
-                logViewer.innerHTML = '';
-
-                const logs = data.logs || data;
-
-                if (!logs || logs.length === 0) {
-                    logViewer.innerHTML = '<div style="text-align:center; padding:2rem; color:#64748b;">로그가 없습니다.</div>';
-                    return;
-                }
-
-                logs.forEach(log => {
-                    const div = document.createElement('div');
-                    div.className = 'log-entry';
-
-                    let levelClass = 'level-INFO';
-                    let logContent = '';
-
-                    if (typeof log === 'object') {
-                        const level = log.level || 'INFO';
-                        if (level === 'ERROR' || level === 'CRITICAL') levelClass = 'level-ERROR';
-                        else if (level === 'WARNING') levelClass = 'level-WARNING';
-                        else if (level === 'DEBUG') levelClass = 'level-DEBUG';
-
-                        logContent = log.full || `[${log.timestamp}] [${level}] ${log.message}`;
-                    } else {
-                        logContent = log;
-                        if (log.includes('ERROR') || log.includes('CRITICAL')) levelClass = 'level-ERROR';
-                        else if (log.includes('WARNING')) levelClass = 'level-WARNING';
-                        else if (log.includes('DEBUG')) levelClass = 'level-DEBUG';
+                    if (!logs || logs.length === 0) {
+                        logViewer.innerHTML = '<div style="text-align:center; padding:2rem; color:#64748b;">로그가 없습니다.</div>';
+                        return;
                     }
 
-                    div.innerHTML = `
+                    logs.forEach(log => {
+                        const div = document.createElement('div');
+                        div.className = 'log-entry';
+
+                        let levelClass = 'level-INFO';
+                        let logContent = '';
+
+                        if (typeof log === 'object') {
+                            const level = log.level || 'INFO';
+                            if (level === 'ERROR' || level === 'CRITICAL') levelClass = 'level-ERROR';
+                            else if (level === 'WARNING') levelClass = 'level-WARNING';
+                            else if (level === 'DEBUG') levelClass = 'level-DEBUG';
+
+                            logContent = log.full || `[${log.timestamp}] [${level}] ${log.message}`;
+                        } else {
+                            logContent = log;
+                            if (log.includes('ERROR') || log.includes('CRITICAL')) levelClass = 'level-ERROR';
+                            else if (log.includes('WARNING')) levelClass = 'level-WARNING';
+                            else if (log.includes('DEBUG')) levelClass = 'level-DEBUG';
+                        }
+
+                        div.innerHTML = `
                         <span class="${levelClass}">${logContent}</span>
                     `;
-                    logViewer.appendChild(div);
+                        logViewer.appendChild(div);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('log-viewer').innerHTML =
+                        '<div style="text-align:center; padding:2rem; color:#ef4444;">로그를 불러오는 중 오류가 발생했습니다.</div>';
                 });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('log-viewer').innerHTML =
-                    '<div style="text-align:center; padding:2rem; color:#ef4444;">로그를 불러오는 중 오류가 발생했습니다.</div>';
-            });
-    }
+        }
 
-    function clearLogs() {
-        if (!confirm('정말로 모든 로그를 삭제하시겠습니까?')) return;
+        function clearLogs() {
+            if (!confirm('정말로 모든 로그를 삭제하시겠습니까?')) return;
 
-        fetch('/api/logs/clear', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                refreshLogs();
-            })
-            .catch(error => console.error('Error:', error));
-    }
+            fetch('/api/logs/clear', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    refreshLogs();
+                })
+                .catch(error => console.error('Error:', error));
+        }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        refreshLogs();
-        // 5초마다 자동 갱신
-        setInterval(refreshLogs, 5000);
-    });
-</script>
-{% endblock %}
+        document.addEventListener('DOMContentLoaded', function () {
+            refreshLogs();
+            // 5초마다 자동 갱신
+            setInterval(refreshLogs, 5000);
+        });
+    </script>
+    {% endblock %}
