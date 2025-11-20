@@ -60,6 +60,26 @@ def set_trader_instance(trader):
     trader_instance = trader
     logger.info("트레이더 인스턴스가 대시보드에 연결되었습니다")
 
+
+def _normalize_symbol_list(symbols) -> List[str]:
+    """문자열/리스트로 전달된 종목 목록을 정규화"""
+    if symbols is None:
+        return []
+
+    if isinstance(symbols, str):
+        raw_list = symbols.split(',')
+    else:
+        raw_list = symbols
+
+    normalized = []
+    seen = set()
+    for item in raw_list:
+        symbol = str(item).strip().upper()
+        if symbol and symbol not in seen:
+            normalized.append(symbol)
+            seen.add(symbol)
+    return normalized
+
 class User(UserMixin):
     """사용자 클래스"""
     def __init__(self, id):
@@ -734,13 +754,36 @@ def handle_settings():
             return jsonify(settings_manager.get_settings())
             
         elif request.method == 'POST':
-            new_settings = request.json
-            settings_manager.save_settings(new_settings)
+            new_settings = request.json or {}
+            current_settings = dict(settings_manager.get_settings())
+
+            long_term_symbols_raw = new_settings.get('long_term_symbols', current_settings.get('long_term_symbols', []))
+            long_term_symbols = _normalize_symbol_list(long_term_symbols_raw)
+
+            short_term_candidates_raw = new_settings.get('short_term_candidates', current_settings.get('short_term_candidates', []))
+            short_term_candidates = _normalize_symbol_list(short_term_candidates_raw)
+            short_term_candidates = [s for s in short_term_candidates if s not in long_term_symbols]
+
+            short_term_enabled = bool(new_settings.get('short_term_enabled', current_settings.get('short_term_enabled', False)))
+
+            try:
+                pool_size = int(new_settings.get('short_term_pool_size', current_settings.get('short_term_pool_size', 3)))
+            except (ValueError, TypeError):
+                pool_size = current_settings.get('short_term_pool_size', 3)
+            pool_size = max(1, min(10, pool_size))
+
+            updated_settings = {
+                **current_settings,
+                'long_term_symbols': long_term_symbols,
+                'short_term_candidates': short_term_candidates,
+                'short_term_enabled': short_term_enabled,
+                'short_term_pool_size': pool_size
+            }
+
+            settings_manager.save_settings(updated_settings)
+            logger.info(f"설정 변경됨: {updated_settings}")
             
-            # 트레이더에게 설정 변경 알림 (선택사항 - 현재는 폴링 방식 사용)
-            logger.info(f"설정 변경됨: {new_settings}")
-            
-            return jsonify({'status': 'success', 'message': '설정이 저장되었습니다'})
+            return jsonify({'status': 'success', 'message': '설정이 저장되었습니다', 'settings': updated_settings})
             
     except Exception as e:
         logger.error(f"설정 API 오류: {str(e)}")

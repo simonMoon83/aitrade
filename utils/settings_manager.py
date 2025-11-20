@@ -19,7 +19,8 @@ class SettingsManager:
         
         try:
             with open(self.settings_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                loaded = json.load(f)
+                return self._ensure_structure(loaded)
         except Exception as e:
             print(f"설정 로드 실패: {e}, 기본값 사용")
             return self._create_default_settings()
@@ -28,14 +29,15 @@ class SettingsManager:
         """기본 설정 생성"""
         default_settings = {
             "long_term_symbols": DEFAULT_SYMBOLS,
-            "short_term_enabled": False,
+            "short_term_enabled": True,
             "short_term_pool_size": 3,
             "short_term_candidates": [
                 "AMD", "INTC", "QCOM", "MU", "NFLX", "DIS", "NKE", "SBUX", "KO", "PEP"
             ] # 예시 후보군
         }
-        self.save_settings(default_settings)
-        return default_settings
+        structured = self._ensure_structure(default_settings)
+        self.save_settings(structured)
+        return structured
 
     def get_settings(self) -> Dict[str, Any]:
         """현재 설정 반환"""
@@ -43,9 +45,33 @@ class SettingsManager:
 
     def save_settings(self, new_settings: Dict[str, Any]):
         """설정 저장"""
-        self.settings = new_settings
+        self.settings = self._ensure_structure(new_settings)
         with open(self.settings_file, 'w', encoding='utf-8') as f:
             json.dump(self.settings, f, indent=4, ensure_ascii=False)
+
+    def _ensure_structure(self, settings: Dict[str, Any]) -> Dict[str, Any]:
+        """설정 파일에 필수 키가 모두 존재하도록 보정"""
+        if not isinstance(settings, dict):
+            settings = {}
+
+        settings.setdefault("long_term_symbols", list(DEFAULT_SYMBOLS))
+        settings.setdefault("short_term_enabled", True)
+        settings.setdefault("short_term_pool_size", 3)
+        settings.setdefault("short_term_candidates", [])
+
+        # 타입 보정
+        if not isinstance(settings["long_term_symbols"], list):
+            settings["long_term_symbols"] = list(DEFAULT_SYMBOLS)
+
+        if not isinstance(settings["short_term_candidates"], list):
+            settings["short_term_candidates"] = []
+
+        try:
+            settings["short_term_pool_size"] = int(settings.get("short_term_pool_size", 3))
+        except ValueError:
+            settings["short_term_pool_size"] = 3
+
+        return settings
 
     def get_long_term_symbols(self) -> List[str]:
         return self.settings.get("long_term_symbols", [])

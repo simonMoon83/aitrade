@@ -82,10 +82,10 @@ class ImprovedBuyLowSellHighStrategy:
         # 포지션 추적
         self.positions = {}  # {symbol: {'entry_date': date, 'entry_price': price}}
         
-        # 뉴스 감성, 섹터, 거시경제 분석기
-        self.news_analyzer = NewsSentimentAnalyzer(FINNHUB_API_KEY, USE_LOCAL_FINBERT)
-        self.sector_analyzer = SectorRotationAnalyzer()
-        self.macro_tracker = MacroIndicatorTracker(FRED_API_KEY)
+        # 뉴스 감성, 섹터, 거시경제 분석기 (지연 로딩)
+        self.news_analyzer = None
+        self.sector_analyzer = None
+        self.macro_tracker = None
         
         # 캐시
         self.news_cache = {}
@@ -817,6 +817,36 @@ class ImprovedBuyLowSellHighStrategy:
         
         return {}
     
+    def _get_news_analyzer(self) -> Optional[NewsSentimentAnalyzer]:
+        """뉴스 분석기 인스턴스를 지연 로딩"""
+        if self.news_analyzer is None:
+            try:
+                self.news_analyzer = NewsSentimentAnalyzer(FINNHUB_API_KEY, USE_LOCAL_FINBERT)
+            except Exception as e:
+                logger.warning(f"뉴스 분석기 초기화 실패: {str(e)}")
+                self.news_analyzer = None
+        return self.news_analyzer
+
+    def _get_sector_analyzer(self) -> Optional[SectorRotationAnalyzer]:
+        """섹터 분석기 인스턴스를 지연 로딩"""
+        if self.sector_analyzer is None:
+            try:
+                self.sector_analyzer = SectorRotationAnalyzer()
+            except Exception as e:
+                logger.warning(f"섹터 분석기 초기화 실패: {str(e)}")
+                self.sector_analyzer = None
+        return self.sector_analyzer
+
+    def _get_macro_tracker(self) -> Optional[MacroIndicatorTracker]:
+        """거시경제 추적기 인스턴스를 지연 로딩"""
+        if self.macro_tracker is None:
+            try:
+                self.macro_tracker = MacroIndicatorTracker(FRED_API_KEY)
+            except Exception as e:
+                logger.warning(f"거시경제 추적기 초기화 실패: {str(e)}")
+                self.macro_tracker = None
+        return self.macro_tracker
+
     def _get_news_sentiment(self, symbol: str) -> Dict:
         """
         뉴스 감성 정보 가져오기 (캐시 관리)
@@ -827,8 +857,18 @@ class ImprovedBuyLowSellHighStrategy:
         Returns:
             Dict: 뉴스 감성 정보
         """
+        analyzer = self._get_news_analyzer()
+        if analyzer is None:
+            return {
+                'score': 0.0,
+                'trend': 'NEUTRAL',
+                'news_count': 0,
+                'buzz_ratio': 1.0,
+                'source': 'error'
+            }
+
         try:
-            return self.news_analyzer.get_sentiment_score(symbol)
+            return analyzer.get_sentiment_score(symbol)
         except Exception as e:
             logger.warning(f"[{symbol}] 뉴스 감성 분석 실패: {str(e)}")
             return {
@@ -849,8 +889,19 @@ class ImprovedBuyLowSellHighStrategy:
         Returns:
             Dict: 섹터 정보
         """
+        analyzer = self._get_sector_analyzer()
+        if analyzer is None:
+            return {
+                'sector': 'Unknown',
+                'rank': 999,
+                'is_strong': False,
+                'phase': 'UNKNOWN',
+                'weight_adjustment': 1.0,
+                'relative_strength': 0.0
+            }
+
         try:
-            return self.sector_analyzer.should_favor_sector(symbol)
+            return analyzer.should_favor_sector(symbol)
         except Exception as e:
             logger.warning(f"[{symbol}] 섹터 분석 실패: {str(e)}")
             return {
@@ -869,8 +920,18 @@ class ImprovedBuyLowSellHighStrategy:
         Returns:
             Dict: 거시경제 환경 정보
         """
+        tracker = self._get_macro_tracker()
+        if tracker is None:
+            return {
+                'environment': 'NEUTRAL',
+                'score': 0,
+                'indicators': {},
+                'signals': [],
+                'position_multiplier': 1.0
+            }
+
         try:
-            return self.macro_tracker.assess_market_environment()
+            return tracker.assess_market_environment()
         except Exception as e:
             logger.warning(f"거시경제 환경 분석 실패: {str(e)}")
             return {

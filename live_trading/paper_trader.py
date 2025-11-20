@@ -845,9 +845,7 @@ class PaperTrader:
                 # 장기 투자 종목 제외 (중복 방지)
                 candidates = [s for s in candidates if s not in long_term_symbols]
                 
-                # TODO: 여기에 지능형 단기 종목 선정 로직 구현 (예: 모멘텀, 거래량 등)
-                # 현재는 후보군 중에서 앞에서부터 N개 선택
-                short_term_symbols = candidates[:count]
+                short_term_symbols = self._select_short_term_symbols(candidates, count)
                 
             # 4. 종목 리스트 병합
             # 기존 symbols와 비교하여 변경사항이 있을 때만 로그 출력
@@ -866,6 +864,77 @@ class PaperTrader:
                 
         except Exception as e:
             log_error(logger, e, "종목 리스트 업데이트")
+
+    def _select_short_term_symbols(self, candidates: List[str], count: int) -> List[str]:
+        """모멘텀 기반으로 단기 후보군 점수를 계산해 최상위 종목을 선택"""
+        if count <= 0 or not candidates:
+            return []
+
+        scored_candidates = []
+        for symbol in candidates:
+            score = self._score_short_term_candidate(symbol)
+            if score is not None:
+                scored_candidates.append((symbol, score))
+
+        if not scored_candidates:
+            return []
+
+        scored_candidates.sort(key=lambda item: item[1], reverse=True)
+        top_symbols = [symbol for symbol, _ in scored_candidates[:count]]
+
+        logger.info(f"⚡ 단기 후보 점수: {[(s, round(score, 2)) for s, score in scored_candidates[:count]]}")
+        return top_symbols
+
+    def _score_short_term_candidate(self, symbol: str) -> Optional[float]:
+        """RSI, 최근 수익률, 거래량을 기반으로 간단한 모멘텀 점수 계산"""
+        try:
+            data = self.current_data.get(symbol)
+
+            if data is None or data.empty:
+                raw_data = data_collector.get_latest_data_incremental(symbol, target_days=60)
+                if raw_data.empty:
+                    return None
+                enriched = feature_engineer.add_technical_indicators(raw_data, symbol=symbol)
+                self.current_data[symbol] = enriched
+                data = enriched
+
+            if len(data) < 6 or 'CLOSE' not in data.columns:
+                return None
+
+            latest = data.iloc[-1]
+            close_series = data['CLOSE']
+            current_price = close_series.iloc[-1]
+            prev_day_price = close_series.iloc[-2]
+            prev_week_price = close_series.iloc[-6]
+
+            daily_change = (current_price - prev_day_price) / prev_day_price * 100 if prev_day_price else 0
+            weekly_change = (current_price - prev_week_price) / prev_week_price * 100 if prev_week_price else 0
+
+            volume_ratio = latest.get('VOLUME_RATIO')
+            if pd.isna(volume_ratio) or volume_ratio is None:
+                recent_volume = data['VOLUME'].iloc[-1]
+                avg_volume = data['VOLUME'].tail(20).mean()
+                volume_ratio = (recent_volume / avg_volume) if avg_volume else 1.0
+
+            rsi = latest.get('RSI', 50)
+
+            score = 0.0
+            score += weekly_change * 2
+            score += daily_change
+            score += (volume_ratio - 1) * 5
+
+            if 45 <= rsi <= 60:
+                score += 3
+            elif 35 <= rsi < 45 or 60 < rsi <= 70:
+                score += 1
+            elif rsi < 30 or rsi > 75:
+                score -= 2
+
+            return score
+
+        except Exception as e:
+            log_error(logger, e, f"단기 후보 점수 계산 {symbol}")
+            return None
     
     def _save_status_file(self, portfolio_value: float, cash: float, positions: Dict):
         """상태 파일 저장 (대시보드가 별도 프로세스일 때 사용)"""

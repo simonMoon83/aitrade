@@ -18,13 +18,37 @@ import pandas as pd
 
 logger = setup_logger("scheduler")
 
-# 시스템 모니터 import
-try:
-    from utils.system_monitor import system_monitor
-    SYSTEM_MONITOR_ENABLED = True
-except ImportError:
-    SYSTEM_MONITOR_ENABLED = False
-    logger.warning("시스템 모니터를 불러올 수 없습니다 - 헬스체크 기능 비활성화")
+# 시스템 모니터는 지연 로딩
+system_monitor = None
+SYSTEM_MONITOR_ENABLED = False
+_SYSTEM_MONITOR_INITIALIZED = False
+
+
+def _ensure_system_monitor() -> bool:
+    """
+    시스템 모니터 모듈을 지연 로딩하여 순환 참조를 피하고
+    필요할 때만 import 합니다.
+    """
+    global system_monitor, SYSTEM_MONITOR_ENABLED, _SYSTEM_MONITOR_INITIALIZED
+
+    if SYSTEM_MONITOR_ENABLED:
+        return True
+
+    if _SYSTEM_MONITOR_INITIALIZED:
+        return False
+
+    try:
+        from utils.system_monitor import system_monitor as monitor
+
+        system_monitor = monitor
+        SYSTEM_MONITOR_ENABLED = True
+        _SYSTEM_MONITOR_INITIALIZED = True
+        logger.info("시스템 모니터 모듈 로드 완료 - 헬스체크 기능 활성화")
+        return True
+    except ImportError:
+        _SYSTEM_MONITOR_INITIALIZED = False
+        logger.warning("시스템 모니터를 불러올 수 없습니다 - 헬스체크 기능 비활성화")
+        return False
 
 class TradingScheduler:
     """거래 스케줄러 클래스"""
@@ -102,7 +126,7 @@ class TradingScheduler:
         schedule.every().monday.at("09:00").do(self._weekly_summary)
         
         # 시스템 헬스체크 (매 시간)
-        if SYSTEM_MONITOR_ENABLED:
+        if _ensure_system_monitor():
             schedule.every().hour.do(self._record_heartbeat)
             logger.info("시스템 헬스체크 스케줄 등록 (매 시간)")
     
@@ -320,7 +344,10 @@ class TradingScheduler:
     def _record_heartbeat(self):
         """시스템 헬스체크 기록"""
         try:
-            if SYSTEM_MONITOR_ENABLED:
+            if not SYSTEM_MONITOR_ENABLED and not _ensure_system_monitor():
+                return
+
+            if SYSTEM_MONITOR_ENABLED and system_monitor:
                 system_monitor.record_heartbeat()
         except Exception as e:
             logger.error(f"헬스체크 기록 오류: {str(e)}")

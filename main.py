@@ -7,6 +7,7 @@ import argparse
 import sys
 import os
 import logging
+import time
 from datetime import datetime
 
 # 프로젝트 루트를 Python 경로에 추가
@@ -125,7 +126,11 @@ def main():
         logger.info("사용자에 의해 중단됨")
     except Exception as e:
         logger.error(f"오류 발생: {str(e)}", exc_info=True)
+        logger.error("비정상 종료로 60초 대기 후 프로세스를 종료합니다. 문제를 확인하세요.")
+        time.sleep(60)
         sys.exit(1)
+    finally:
+        logger.info("AI 주식 트레이더 프로세스를 종료합니다.")
 
 if __name__ == "__main__":
     main()

@@ -4,24 +4,23 @@
 
 {% block extra_css %}
 <style>
-    /* 종목 카드 그리드 */
     .symbol-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
         gap: 1rem;
         margin-bottom: 1rem;
-        min-height: 50px;
     }
 
     .symbol-card {
         background: white;
         border: 1px solid var(--border-color);
-        border-radius: 12px;
+        border-radius: 14px;
         padding: 1.25rem;
         position: relative;
-        transition: all 0.2s;
+        transition: all 0.2s ease;
         display: flex;
         flex-direction: column;
+        gap: 0.75rem;
     }
 
     .symbol-card:hover {
@@ -33,44 +32,30 @@
     .symbol-header {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 1rem;
+        align-items: center;
     }
 
     .symbol-name {
-        font-weight: 700;
-        font-size: 1.25rem;
-        color: #333;
+        font-weight: 800;
+        font-size: 1.35rem;
+        color: #1f2937;
         letter-spacing: 0.5px;
     }
 
-    .like-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 1.5rem;
-        color: #e0e0e0;
-        transition: transform 0.2s, color 0.2s;
-        padding: 0;
-        line-height: 1;
-    }
-
-    .like-btn:hover {
-        transform: scale(1.1);
-    }
-
-    .like-btn.active {
-        color: #ff4757;
+    .symbol-actions {
+        display: flex;
+        gap: 0.35rem;
     }
 
     .symbol-price-box {
-        margin-top: auto;
+        display: flex;
+        flex-direction: column;
     }
 
     .symbol-price {
-        font-size: 1.5rem;
+        font-size: 1.6rem;
         font-weight: 700;
-        color: #2c3e50;
+        color: #111827;
         margin-bottom: 0.25rem;
         letter-spacing: -0.5px;
     }
@@ -84,31 +69,40 @@
     }
 
     .up {
-        color: #27ae60;
+        color: #22c55e;
     }
 
     .down {
-        color: #e74c3c;
+        color: #ef4444;
     }
 
     .neutral {
-        color: #7f8c8d;
+        color: #94a3b8;
     }
 
     .search-box {
         display: flex;
-        gap: 10px;
-        margin-bottom: 1.5rem;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
         background: #f8f9fa;
         padding: 1rem;
-        border-radius: 8px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .search-row {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
     }
 
     .search-input {
         flex: 1;
+        min-width: 220px;
         padding: 0.75rem 1rem;
-        border: 1px solid #ddd;
-        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
         font-size: 1rem;
         outline: none;
         transition: border 0.3s;
@@ -118,14 +112,19 @@
         border-color: #667eea;
     }
 
-    .section-desc {
-        color: #64748b;
-        font-size: 0.9rem;
-        margin-bottom: 1.25rem;
-        line-height: 1.5;
+    .search-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
     }
 
-    /* 단기 설정 스타일 */
+    .section-desc {
+        color: #64748b;
+        font-size: 0.95rem;
+        margin-bottom: 1.25rem;
+        line-height: 1.6;
+    }
+
     .form-group {
         margin-bottom: 1.25rem;
     }
@@ -134,52 +133,84 @@
         display: block;
         margin-bottom: 0.5rem;
         font-weight: 600;
-        color: #333;
+        color: #111827;
     }
 
     .form-text {
         font-size: 0.85rem;
-        color: #64748b;
-        margin-top: 0.25rem;
+        color: #94a3b8;
+        margin-top: 0.35rem;
     }
 
     input[type="number"],
-    textarea {
+    input[type="text"] {
         width: 100%;
         padding: 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
         font-size: 0.95rem;
         font-family: inherit;
     }
 
-    textarea {
-        height: 80px;
-        resize: vertical;
-    }
-
-    .checkbox-wrapper {
+    .toggle-row {
         display: flex;
         align-items: center;
-        gap: 12px;
+        justify-content: space-between;
+        background: #f1f5f9;
         padding: 1rem;
-        background: #f8f9fa;
-        border-radius: 8px;
-        margin-bottom: 1.25rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        border: 1px solid #e2e8f0;
+        gap: 1rem;
+        flex-wrap: wrap;
     }
 
-    .checkbox-wrapper input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
-        accent-color: #667eea;
+    .chip-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        min-height: 48px;
     }
 
-    .checkbox-wrapper label {
-        margin-bottom: 0;
-        cursor: pointer;
+    .symbol-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+        background: #e0e7ff;
+        color: #1e1b4b;
+        font-weight: 600;
+        border: 1px solid #c7d2fe;
+    }
+
+    .chip-price {
+        font-size: 0.85rem;
+        color: #1f2937;
+    }
+
+    .chip-change {
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .chip-remove {
+        background: transparent;
+        border: none;
+        color: #475569;
         font-size: 1rem;
-        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .chip-remove:hover {
+        color: #ef4444;
+    }
+
+    .chip-input-row {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
     }
 
     .alert {
@@ -236,11 +267,79 @@
         grid-column: 1 / -1;
     }
 
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #1f2937;
+        border: none;
+    }
+
+    .btn-secondary:hover {
+        background: #cbd5f5;
+        color: #111827;
+    }
+
+    .btn-ghost {
+        background: rgba(102, 126, 234, 0.15);
+        color: #4338ca;
+        border: none;
+    }
+
+    .btn-ghost:hover {
+        background: rgba(102, 126, 234, 0.25);
+        color: #312e81;
+    }
+
     .version-tag {
         font-size: 0.75rem;
         color: #cbd5e1;
         text-align: right;
         margin-top: 1rem;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 52px;
+        height: 28px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .switch .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #cbd5f5;
+        transition: 0.3s;
+        border-radius: 34px;
+    }
+
+    .switch .slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.3s;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .switch input:checked + .slider {
+        background-color: #6366f1;
+    }
+
+    .switch input:checked + .slider:before {
+        transform: translateX(24px);
     }
 </style>
 {% endblock %}
@@ -248,53 +347,63 @@
 {% block content %}
 <div id="alert-box" class="alert"></div>
 
-<!-- 장기 투자 섹션 -->
+<!-- 종목 탐색 & 추천 -->
 <div class="card">
-    <h3>
-        💖 장기 투자 관심 종목
-        <span id="loading-indicator" style="display:none; margin-left:10px;">
-            <div class="loading-spinner"></div>
-        </span>
-    </h3>
+    <h3>🧭 종목 탐색 & 추천</h3>
     <p class="section-desc">
-        여기에 등록된 종목들은 <strong>장기 보유 목적</strong>으로 관리되며, 시스템의 단기 트레이딩 대상에서 제외됩니다.<br>
-        하트(♥)를 클릭하여 관심 종목을 추가하거나 제거하세요.
+        빠르게 종목을 검색하고 장기/단기 풀에 추가하세요. 추천 종목 영역에서 바로 버튼 한 번으로 담을 수 있습니다.
     </p>
 
     <div class="search-box">
-        <input type="text" id="symbol-search" class="search-input" placeholder="종목 코드 입력 (예: AAPL, TSLA)"
-            onkeypress="handleEnter(event)">
-        <button class="btn btn-primary" onclick="addSymbolFromSearch()">
-            <span>➕</span>
-            <span>추가</span>
-        </button>
+        <div class="search-row">
+            <input type="text" id="symbol-search" class="search-input" placeholder="종목 코드 입력 (예: AAPL, TSLA)"
+                onkeypress="handleEnter(event)">
+            <span id="loading-indicator" style="display:none;">
+                <div class="loading-spinner"></div>
+            </span>
+        </div>
+        <div class="search-actions">
+            <button class="btn btn-primary" onclick="addSymbolFromSearch('long')">장기 포트폴리오에 추가</button>
+            <button class="btn btn-secondary" onclick="addSymbolFromSearch('short')">단기 후보로 추가</button>
+        </div>
     </div>
+
+    <div id="recommended-symbols" class="symbol-grid">
+        <!-- 추천 종목 카드 -->
+    </div>
+</div>
+
+<!-- 장기 투자 섹션 -->
+<div class="card">
+    <h3>💖 장기 투자 포트폴리오</h3>
+    <p class="section-desc">
+        장기 보유 중인 종목입니다. 각 카드의 <strong>제거</strong> 버튼으로 포트폴리오에서 제외할 수 있습니다.
+    </p>
 
     <div id="my-symbols" class="symbol-grid">
         <!-- 내 종목 카드들이 여기에 렌더링됩니다 -->
     </div>
 </div>
 
-<!-- 추천 종목 섹션 -->
-<div class="card" id="recommended-card">
-    <h3>🔥 인기 / 추천 종목</h3>
-    <p class="section-desc">시장에서 주목받는 주요 기술주 및 ETF입니다. 클릭하여 내 관심 종목에 추가해보세요.</p>
-    <div id="recommended-symbols" class="symbol-grid">
-        <!-- 추천 종목 카드들이 여기에 렌더링됩니다 -->
-    </div>
-</div>
-
 <!-- 단기 투자 설정 섹션 -->
 <div class="card">
-    <h3>⚡ 시스템 단기 트레이딩 설정</h3>
-    <p class="section-desc">시스템이 시장 상황을 분석하여 자동으로 단기 매매를 수행할지 설정합니다.</p>
+    <h3>⚡ 시스템 단기 트레이딩 후보군</h3>
+    <p class="section-desc">
+        시스템이 자동으로 스코어링하여 매매할 <strong>단기 후보군</strong>을 관리합니다. 종목이 많을수록 선택 폭이 넓어집니다.
+    </p>
 
-    <div class="checkbox-wrapper">
-        <input type="checkbox" id="short-term-enabled">
-        <label for="short-term-enabled">시스템 자동 단기 트레이딩 활성화</label>
+    <div class="toggle-row">
+        <div>
+            <strong>시스템 자동 단기 트레이딩</strong>
+            <div class="form-text">필터링된 후보 중 상위 N개가 자동으로 운용됩니다.</div>
+        </div>
+        <label class="switch">
+            <input type="checkbox" id="short-term-enabled">
+            <span class="slider"></span>
+        </label>
     </div>
 
-    <div id="short-term-options" style="display: none; padding: 1.5rem; background: #f8f9fa; border-radius: 8px;">
+    <div id="short-term-options" style="display: none; padding: 1.5rem; background: #f8f9fa; border-radius: 12px; border: 1px solid #e2e8f0;">
         <div class="form-group">
             <label for="short-term-count">최대 운용 종목 수</label>
             <input type="number" id="short-term-count" min="1" max="10" value="3">
@@ -302,13 +411,24 @@
         </div>
 
         <div class="form-group">
-            <label for="short-term-candidates">단기 투자 후보군 (시스템 선택 풀)</label>
-            <textarea id="short-term-candidates" placeholder="예: NVDA, AMD, PLTR..."></textarea>
-            <div class="form-text">시스템이 모니터링할 후보 종목들입니다. (장기 투자 종목과 중복 시 자동으로 제외됨)</div>
+            <label>단기 후보군</label>
+            <div class="chip-input-row">
+                <input type="text" id="short-term-inline-input" placeholder="예: NVDA" />
+                <button class="btn btn-primary" onclick="addShortTermCandidateFromInline()">+ 후보 추가</button>
+            </div>
+            <div id="short-term-candidate-chips" class="chip-container"></div>
+            <div class="form-text">
+                추천 또는 검색 섹션에서도 <strong>단기 후보 추가</strong> 버튼으로 쉽게 추가할 수 있습니다.
+            </div>
         </div>
 
-        <button class="btn btn-success" style="width:100%; margin-top:0.5rem;" onclick="saveShortTermSettings()">단기 설정
-            저장</button>
+        <button class="btn btn-success" style="width:100%; margin-top:0.5rem;" onclick="saveShortTermSettings()">
+            단기 설정 저장
+        </button>
+    </div>
+</div>
+    <div id="recommended-symbols" class="symbol-grid">
+        <!-- 추천 종목 카드들이 여기에 렌더링됩니다 -->
     </div>
 </div>
 
@@ -338,7 +458,7 @@
 
     function handleEnter(event) {
         if (event.key === 'Enter') {
-            addSymbolFromSearch();
+            addSymbolFromSearch('long');
         }
     }
 
@@ -380,11 +500,10 @@
             const countInput = document.getElementById('short-term-count');
             if (countInput) countInput.value = data.short_term_pool_size;
 
-            const candidatesInput = document.getElementById('short-term-candidates');
-            if (candidatesInput) candidatesInput.value = data.short_term_candidates.join(', ');
-
             const options = document.getElementById('short-term-options');
             if (options) options.style.display = data.short_term_enabled ? 'block' : 'none';
+
+            renderShortTermCandidates();
 
         } catch (error) {
             console.error("Error loading settings:", error);
@@ -399,7 +518,11 @@
 
         try {
             // 내 종목 + 추천 종목 합치기
-            const allSymbols = [...new Set([...currentSettings.long_term_symbols, ...RECOMMENDED_SYMBOLS])];
+            const allSymbols = [...new Set([
+                ...currentSettings.long_term_symbols,
+                ...currentSettings.short_term_candidates,
+                ...RECOMMENDED_SYMBOLS
+            ])];
 
             const response = await fetch('/api/market/quotes', {
                 method: 'POST',
@@ -422,6 +545,7 @@
     function renderAll() {
         renderMySymbols();
         renderRecommendedSymbols();
+        renderShortTermCandidates();
     }
 
     // 내 종목 렌더링
@@ -431,12 +555,12 @@
         container.innerHTML = '';
 
         if (currentSettings.long_term_symbols.length === 0) {
-            container.innerHTML = '<div class="empty-message">등록된 장기 투자 종목이 없습니다.<br>아래 추천 목록에서 선택하거나 검색하여 추가하세요.</div>';
+            container.innerHTML = '<div class="empty-message">등록된 장기 투자 종목이 없습니다.<br>추천 목록이나 검색을 통해 추가해보세요.</div>';
             return;
         }
 
         currentSettings.long_term_symbols.forEach(symbol => {
-            const card = createSymbolCard(symbol, true);
+            const card = createSymbolCard(symbol, 'portfolio');
             container.appendChild(card);
         });
     }
@@ -459,26 +583,40 @@
         }
 
         symbolsToShow.forEach(symbol => {
-            const card = createSymbolCard(symbol, false);
+            const card = createSymbolCard(symbol, 'recommended');
             container.appendChild(card);
         });
     }
 
     // 카드 생성 헬퍼
-    function createSymbolCard(symbol, isLiked) {
+    function createSymbolCard(symbol, mode) {
         const quote = marketQuotes[symbol] || { price: 0, change: 0, change_percent: 0 };
         const isUp = quote.change >= 0;
         const colorClass = quote.change > 0 ? 'up' : (quote.change < 0 ? 'down' : 'neutral');
         const sign = quote.change > 0 ? '+' : '';
+
+        let actionsHtml = '';
+        if (mode === 'portfolio') {
+            actionsHtml = `
+                <button class="btn btn-ghost" onclick="removeLongTermSymbol('${symbol}')">
+                    제거
+                </button>
+            `;
+        } else {
+            actionsHtml = `
+                <div class="symbol-actions">
+                    <button class="btn btn-primary" onclick="addLongTermSymbol('${symbol}')">장기</button>
+                    <button class="btn btn-secondary" onclick="addShortTermCandidate('${symbol}')">단기</button>
+                </div>
+            `;
+        }
 
         const div = document.createElement('div');
         div.className = 'symbol-card';
         div.innerHTML = `
             <div class="symbol-header">
                 <div class="symbol-name">${symbol}</div>
-                <button class="like-btn ${isLiked ? 'active' : ''}" onclick="toggleLike('${symbol}')">
-                    ${isLiked ? '♥' : '♡'}
-                </button>
+                ${actionsHtml}
             </div>
             <div class="symbol-price-box">
                 <div class="symbol-price">$${quote.price.toFixed(2)}</div>
@@ -490,19 +628,44 @@
         return div;
     }
 
+    function renderShortTermCandidates() {
+        const container = document.getElementById('short-term-candidate-chips');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (!currentSettings.short_term_candidates || currentSettings.short_term_candidates.length === 0) {
+            container.innerHTML = '<div class="empty-message" style="width:100%;">단기 후보군이 비어 있습니다. 추천/검색 영역에서 추가해보세요.</div>';
+            return;
+        }
+
+        currentSettings.short_term_candidates.forEach(symbol => {
+            const quote = marketQuotes[symbol] || { price: 0, change_percent: 0 };
+            const colorClass = quote.change_percent > 0 ? 'up' : (quote.change_percent < 0 ? 'down' : 'neutral');
+            const chip = document.createElement('div');
+            chip.className = 'symbol-chip';
+            chip.innerHTML = `
+                <span class="chip-symbol">${symbol}</span>
+                <span class="chip-price">$${quote.price.toFixed(2)}</span>
+                <span class="chip-change ${colorClass}">${quote.change_percent.toFixed(2)}%</span>
+                <button class="chip-remove" onclick="removeShortTermCandidate('${symbol}')">&times;</button>
+            `;
+            container.appendChild(chip);
+        });
+    }
+
     // 검색으로 추가
-    async function addSymbolFromSearch() {
+    async function addSymbolFromSearch(target = 'long') {
         const input = document.getElementById('symbol-search');
         const symbol = input.value.trim().toUpperCase();
 
         if (!symbol) return;
 
-        if (currentSettings.long_term_symbols.includes(symbol)) {
-            showAlert('이미 등록된 종목입니다.', 'error');
-            return;
+        if (target === 'short') {
+            await addShortTermCandidate(symbol);
+        } else {
+            await addLongTermSymbol(symbol);
         }
 
-        await toggleLike(symbol);
         input.value = '';
 
         // 새 종목 시세 즉시 조회
@@ -510,36 +673,79 @@
         renderAll();
     }
 
-    // 좋아요 토글 (핵심 기능)
-    async function toggleLike(symbol) {
-        const index = currentSettings.long_term_symbols.indexOf(symbol);
+    function normalizeSymbol(symbol) {
+        return (symbol || '').trim().toUpperCase();
+    }
 
-        if (index === -1) {
-            // 추가
-            currentSettings.long_term_symbols.push(symbol);
-            showAlert(`${symbol} 종목이 추가되었습니다.`, 'success');
-        } else {
-            // 제거
-            currentSettings.long_term_symbols.splice(index, 1);
-            showAlert(`${symbol} 종목이 제거되었습니다.`, 'success');
+    async function addLongTermSymbol(symbol) {
+        symbol = normalizeSymbol(symbol);
+        if (!symbol) return;
+
+        if (currentSettings.long_term_symbols.includes(symbol)) {
+            showAlert(`${symbol}은(는) 이미 장기 포트폴리오에 있습니다.`, 'error');
+            return;
         }
 
-        // 즉시 저장
+        currentSettings.long_term_symbols.push(symbol);
+        // 단기 후보에서 중복 제거
+        currentSettings.short_term_candidates = currentSettings.short_term_candidates.filter(s => s !== symbol);
         await saveSettingsToServer();
-
-        // UI 갱신
+        await fetchMarketData();
         renderAll();
+        showAlert(`${symbol} 종목이 장기 포트폴리오에 추가되었습니다.`, 'success');
+    }
+
+    async function removeLongTermSymbol(symbol) {
+        symbol = normalizeSymbol(symbol);
+        currentSettings.long_term_symbols = currentSettings.long_term_symbols.filter(s => s !== symbol);
+        await saveSettingsToServer();
+        renderAll();
+        showAlert(`${symbol} 종목을 장기 포트폴리오에서 제거했습니다.`, 'success');
+    }
+
+    async function addShortTermCandidate(symbol) {
+        symbol = normalizeSymbol(symbol);
+        if (!symbol) return;
+
+        if (currentSettings.long_term_symbols.includes(symbol)) {
+            showAlert('장기 포트폴리오에 있는 종목은 단기 후보군에 추가할 수 없습니다.', 'error');
+            return;
+        }
+
+        if (!currentSettings.short_term_candidates.includes(symbol)) {
+            currentSettings.short_term_candidates.push(symbol);
+            await saveSettingsToServer();
+            await fetchMarketData();
+            renderShortTermCandidates();
+            showAlert(`${symbol} 종목이 단기 후보군에 추가되었습니다.`, 'success');
+        } else {
+            showAlert('이미 단기 후보군에 있는 종목입니다.', 'error');
+        }
+    }
+
+    async function removeShortTermCandidate(symbol) {
+        symbol = normalizeSymbol(symbol);
+        currentSettings.short_term_candidates = currentSettings.short_term_candidates.filter(s => s !== symbol);
+        await saveSettingsToServer();
+        renderShortTermCandidates();
+        showAlert(`${symbol} 종목을 단기 후보군에서 제거했습니다.`, 'success');
+    }
+
+    async function addShortTermCandidateFromInline() {
+        const input = document.getElementById('short-term-inline-input');
+        if (!input) return;
+
+        const symbol = input.value.trim().toUpperCase();
+        if (!symbol) return;
+
+        await addShortTermCandidate(symbol);
+        input.value = '';
     }
 
     // 단기 설정 저장
     async function saveShortTermSettings() {
         currentSettings.short_term_enabled = document.getElementById('short-term-enabled').checked;
         currentSettings.short_term_pool_size = parseInt(document.getElementById('short-term-count').value);
-
-        currentSettings.short_term_candidates = document.getElementById('short-term-candidates').value
-            .split(',')
-            .map(s => s.trim().toUpperCase())
-            .filter(s => s.length > 0);
 
         await saveSettingsToServer();
         showAlert('단기 트레이딩 설정이 저장되었습니다.', 'success');
