@@ -11,6 +11,7 @@ import time
 import os
 from datetime import datetime, timedelta
 from typing import Dict, Optional, List
+from collections import deque
 import pandas as pd
 import yfinance as yf
 
@@ -59,6 +60,33 @@ def set_trader_instance(trader):
     global trader_instance
     trader_instance = trader
     logger.info("트레이더 인스턴스가 대시보드에 연결되었습니다")
+
+
+STATUS_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'trader_status.json')
+
+
+def _load_status_file() -> Optional[Dict]:
+    """저장된 trader_status.json을 읽어옵니다."""
+    try:
+        if os.path.exists(STATUS_FILE):
+            with open(STATUS_FILE, 'r') as f:
+                return json.load(f)
+    except Exception as e:
+        logger.error(f"상태 파일 읽기 오류: {str(e)}")
+    return None
+
+
+def _paginate_list(data: List[Dict], page: int, per_page: int) -> Dict:
+    total = len(data)
+    start_idx = (page - 1) * per_page
+    end_idx = start_idx + per_page
+    return {
+        'trades': data[start_idx:end_idx],
+        'total': total,
+        'page': page,
+        'per_page': per_page,
+        'pages': (total + per_page - 1) // per_page
+    }
 
 
 def _normalize_symbol_list(symbols) -> List[str]:
@@ -157,8 +185,12 @@ def get_portfolio():
         if trader_instance and hasattr(trader_instance, 'get_current_status'):
             status = trader_instance.get_current_status()
             return jsonify(status)
-        else:
-            return jsonify(dashboard_data)
+
+        status = _load_status_file()
+        if status:
+            return jsonify(status)
+
+        return jsonify(dashboard_data)
     except Exception as e:
         logger.error(f"포트폴리오 API 오류: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -175,45 +207,54 @@ def get_trades():
         start_date = request.args.get('start_date', None)
         end_date = request.args.get('end_date', None)
         
+        trades_records: List[Dict] = []
+
+        start_dt = pd.to_datetime(start_date) if start_date else None
+        end_dt = pd.to_datetime(end_date) if end_date else None
+
         if trader_instance and hasattr(trader_instance, 'get_trade_history'):
             trade_history = trader_instance.get_trade_history()
-            
             if not trade_history.empty:
-                # 필터링
                 if symbol:
                     trade_history = trade_history[trade_history['symbol'] == symbol]
                 if order_type:
                     trade_history = trade_history[trade_history['order_type'] == order_type]
-                if start_date:
-                    trade_history = trade_history[trade_history['timestamp'] >= start_date]
-                if end_date:
-                    trade_history = trade_history[trade_history['timestamp'] <= end_date]
-                
-                # 정렬 (최신순 - 시간 역순)
+                if start_dt is not None:
+                    trade_history = trade_history[pd.to_datetime(trade_history['timestamp']) >= start_dt]
+                if end_dt is not None:
+                    trade_history = trade_history[pd.to_datetime(trade_history['timestamp']) <= end_dt]
+
                 trade_history = trade_history.sort_values('timestamp', ascending=False)
-                
-                # 페이지네이션
-                total = len(trade_history)
-                start_idx = (page - 1) * per_page
-                end_idx = start_idx + per_page
-                
-                trades_data = trade_history.iloc[start_idx:end_idx].to_dict('records')
-                
-                return jsonify({
-                    'trades': trades_data,
-                    'total': total,
-                    'page': page,
-                    'per_page': per_page,
-                    'pages': (total + per_page - 1) // per_page
-                })
-        
-        return jsonify({
-            'trades': [],
-            'total': 0,
-            'page': 1,
-            'per_page': per_page,
-            'pages': 0
-        })
+                trades_records = trade_history.to_dict('records')
+                for record in trades_records:
+                    ts = record.get('timestamp')
+                    if hasattr(ts, 'isoformat'):
+                        record['timestamp'] = ts.isoformat()
+
+        if not trades_records:
+            status = _load_status_file()
+            if status and status.get('trade_history'):
+                trades_records = status['trade_history']
+                # 상태 파일에는 이미 문자열 timestamp가 들어있다고 가정
+                if symbol:
+                    trades_records = [t for t in trades_records if t.get('symbol') == symbol]
+                if order_type:
+                    trades_records = [t for t in trades_records if t.get('order_type') == order_type]
+                if start_dt is not None:
+                    trades_records = [
+                        t for t in trades_records
+                        if pd.to_datetime(t.get('timestamp')) >= start_dt
+                    ]
+                if end_dt is not None:
+                    trades_records = [
+                        t for t in trades_records
+                        if pd.to_datetime(t.get('timestamp')) <= end_dt
+                    ]
+
+        trades_records.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+
+        paged = _paginate_list(trades_records, page, per_page)
+        return jsonify(paged)
     except Exception as e:
         logger.error(f"거래 내역 API 오류: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -1263,11 +1304,10 @@ def set_trader_instance(trader):
     trader_instance = trader
     logger.info("트레이더 인스턴스 설정 완료")
 
-def load_signals_from_logs(days=1) -> List[Dict]:
-    """로그 파일에서 신호 데이터 로드 (개선된 버전)"""
-    signals = []
+def load_signals_from_logs(days=1, max_lines=4000) -> List[Dict]:
+    """로그 파일에서 최근 신호 데이터를 로드"""
+    signals: List[Dict] = []
     try:
-        # 최근 N일간의 로그 확인
         for day_offset in range(days):
             date = (datetime.now() - timedelta(days=day_offset)).strftime('%Y%m%d')
             log_files = [
@@ -1275,50 +1315,59 @@ def load_signals_from_logs(days=1) -> List[Dict]:
                 f'improved_buy_low_sell_high_{date}.log',
                 f'market_analyzer_{date}.log'
             ]
-            
+
             for log_file in log_files:
                 log_path = os.path.join('logs', log_file)
-                if os.path.exists(log_path):
-                    with open(log_path, 'r', encoding='utf-8') as f:
-                        for line in f:
-                            # 신호 관련 로그 찾기 (더 상세하게)
-                            line_upper = line.upper()
-                            if any(keyword in line_upper for keyword in ['신호', 'SIGNAL', '매수', '매도', 'BUY', 'SELL', 'HOLD']):
-                                try:
-                                    parts = line.strip().split(' - ')
-                                    if len(parts) >= 3:
-                                        # 신호 타입 파싱
-                                        message = ' - '.join(parts[2:])
-                                        signal_type = 'UNKNOWN'
-                                        
-                                        if 'BUY' in line_upper or '매수' in line:
-                                            signal_type = 'BUY'
-                                        elif 'SELL' in line_upper or '매도' in line:
-                                            signal_type = 'SELL'
-                                        elif 'HOLD' in line_upper or '보유' in line:
-                                            signal_type = 'HOLD'
-                                        
-                                        # 종목 추출 시도
-                                        symbol = None
-                                        for stock in ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA']:
-                                            if stock in line:
-                                                symbol = stock
-                                                break
-                                        
-                                        signals.append({
-                                            'timestamp': parts[0],
-                                            'level': parts[1],
-                                            'message': message,
-                                            'signal_type': signal_type,
-                                            'symbol': symbol,
-                                            'source': log_file,
-                                            'date': date
-                                        })
-                                except:
-                                    continue
+                if not os.path.exists(log_path):
+                    continue
+
+                try:
+                    with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        recent_lines = deque(f, maxlen=max_lines)
+                except Exception as read_err:
+                    logger.debug(f"신호 로그 읽기 오류 ({log_path}): {read_err}")
+                    continue
+
+                for line in recent_lines:
+                    line_upper = line.upper()
+                    if not any(keyword in line_upper for keyword in ['신호', 'SIGNAL', '매수', '매도', 'BUY', 'SELL', 'HOLD']):
+                        continue
+
+                    try:
+                        parts = line.strip().split(' - ')
+                        if len(parts) < 3:
+                            continue
+
+                        message = ' - '.join(parts[2:])
+                        signal_type = 'UNKNOWN'
+
+                        if 'BUY' in line_upper or '매수' in line:
+                            signal_type = 'BUY'
+                        elif 'SELL' in line_upper or '매도' in line:
+                            signal_type = 'SELL'
+                        elif 'HOLD' in line_upper or '보유' in line:
+                            signal_type = 'HOLD'
+
+                        symbol = None
+                        for stock in ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA']:
+                            if stock in line:
+                                symbol = stock
+                                break
+
+                        signals.append({
+                            'timestamp': parts[0],
+                            'level': parts[1],
+                            'message': message,
+                            'signal_type': signal_type,
+                            'symbol': symbol,
+                            'source': log_file,
+                            'date': date
+                        })
+                    except Exception:
+                        continue
     except Exception as e:
         logger.error(f"신호 로드 오류: {str(e)}")
-    
+
     return signals
 
 # =============================================================================

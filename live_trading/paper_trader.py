@@ -43,7 +43,7 @@ from utils.logger import setup_logger, log_trade, log_signal, log_portfolio, log
 from utils.data_collector import data_collector
 from utils.feature_engineering import feature_engineer
 from strategies.improved.buy_low_sell_high import get_trading_signal
-from backtesting.portfolio_manager import PortfolioManager, OrderType
+from backtesting.portfolio_manager import PortfolioManager, OrderType, Trade
 from utils.position_manager import position_manager
 from utils.market_analyzer import market_analyzer
 from live_trading.risk_manager import risk_manager
@@ -717,6 +717,8 @@ class PaperTrader:
             
             self.daily_trade_count += 1
             logger.info(f"   금일 거래 횟수: {self.daily_trade_count}")
+
+            self._record_trade_history(symbol, 'buy', quantity, price)
             
             # 포지션 매니저 업데이트 (개선된 전략)
             try:
@@ -769,6 +771,8 @@ class PaperTrader:
             
             self.daily_trade_count += 1
             logger.info(f"   금일 거래 횟수: {self.daily_trade_count}")
+
+            self._record_trade_history(symbol, 'sell', quantity, price, pnl)
             
             # 포지션 매니저 업데이트 (개선된 전략)
             try:
@@ -871,6 +875,22 @@ class PaperTrader:
         except Exception as e:
             log_error(logger, e, "종목 리스트 업데이트")
 
+    def _record_trade_history(self, symbol: str, side: str, quantity: int, price: float, pnl: float = 0.0):
+        """레포트용 거래 히스토리를 기록 (Alpaca 주문과 별도로 추적)"""
+        try:
+            order_type = OrderType.BUY if side.lower() == 'buy' else OrderType.SELL
+            trade = Trade(
+                symbol=symbol,
+                order_type=order_type,
+                quantity=quantity,
+                price=price,
+                timestamp=datetime.now(),
+                pnl=pnl
+            )
+            self.portfolio_manager.trades.append(trade)
+        except Exception as e:
+            logger.debug(f"거래 히스토리 기록 실패: {symbol} {side} {quantity} @ {price} - {str(e)}")
+
     def _initialize_long_term_positions(self):
         """PaperTrader 시작 시 장기 종목을 보유 자산의 절반으로 매수"""
         if self.long_term_initialized:
@@ -953,6 +973,7 @@ class PaperTrader:
                     )
                     logger.info(f"🛒 장기 투자 매수: {symbol} {quantity}주 @ ${price:.2f} (배정 자금 ${allocation:,.2f})")
                     self.daily_trade_count += 1
+                    self._record_trade_history(symbol, 'buy', quantity, price)
                     orders_submitted += 1
                 except Exception as e:
                     log_error(logger, e, f"장기 투자 매수 주문 {symbol}")
@@ -1099,6 +1120,21 @@ class PaperTrader:
                 'is_running': self.is_running,
                 'last_updated': datetime.now().isoformat()
             }
+
+            try:
+                trade_history = self.portfolio_manager.get_trade_history()
+                if not trade_history.empty:
+                    trade_history = trade_history.tail(200).copy()
+                    if 'timestamp' in trade_history.columns:
+                        trade_history['timestamp'] = trade_history['timestamp'].apply(
+                            lambda ts: ts.isoformat() if isinstance(ts, (datetime, pd.Timestamp)) else str(ts)
+                        )
+                    status_data['trade_history'] = trade_history.to_dict('records')
+                else:
+                    status_data['trade_history'] = []
+            except Exception as e:
+                logger.debug(f"거래 히스토리 직렬화 실패: {str(e)}")
+                status_data['trade_history'] = []
 
             with open(status_file, 'w') as f:
                 json.dump(status_data, f, indent=2)
