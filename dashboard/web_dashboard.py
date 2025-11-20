@@ -484,30 +484,56 @@ def get_performance_chart():
     """성과 차트 데이터 API"""
     try:
         days = request.args.get('days', 30, type=int)
-        
+        cutoff = datetime.now() - timedelta(days=days)
+
+        history = []
         if trader_instance and hasattr(trader_instance, 'portfolio_manager'):
-            # 포트폴리오 매니저에서 히스토리 가져오기
-            portfolio_history = trader_instance.portfolio_manager.portfolio_history
-            
-            if portfolio_history:
-                # 최근 N일 데이터
-                recent_history = portfolio_history[-days:]
-                
-                dates = [h['timestamp'].strftime('%Y-%m-%d %H:%M') for h in recent_history]
+            history = getattr(trader_instance.portfolio_manager, 'portfolio_history', [])
+
+        if not history:
+            status = _load_status_file()
+            if status:
+                history = status.get('portfolio_history', [])
+                for entry in history:
+                    ts = entry.get('timestamp')
+                    if isinstance(ts, str):
+                        entry['timestamp'] = datetime.fromisoformat(ts)
+
+        if history:
+            normalized = []
+            for entry in history:
+                ts = entry.get('timestamp')
+                if isinstance(ts, str):
+                    try:
+                        ts = datetime.fromisoformat(ts)
+                    except Exception:
+                        continue
+                normalized.append({
+                    'timestamp': ts,
+                    'total_value': entry.get('total_value', 0),
+                    'cash': entry.get('cash', 0)
+                })
+
+            normalized.sort(key=lambda x: x['timestamp'])
+            recent_history = [h for h in normalized if h['timestamp'] >= cutoff]
+            if not recent_history:
+                recent_history = normalized[-min(len(normalized), 500):]
+
+            if recent_history:
+                labels = [h['timestamp'].strftime('%Y-%m-%d %H:%M') for h in recent_history]
                 values = [h['total_value'] for h in recent_history]
-                returns = [(v / 10000 - 1) * 100 for v in values]
-                
+                returns = []
+                if values:
+                    base = values[0] if values[0] != 0 else 1
+                    returns = [((v / base) - 1) * 100 for v in values]
+
                 return jsonify({
-                    'labels': dates,
+                    'labels': labels,
                     'portfolio_values': values,
                     'returns': returns
                 })
-        
-        return jsonify({
-            'labels': [],
-            'portfolio_values': [],
-            'returns': []
-        })
+
+        return jsonify({'labels': [], 'portfolio_values': [], 'returns': []})
     except Exception as e:
         logger.error(f"차트 API 오류: {str(e)}")
         return jsonify({'error': str(e)}), 500

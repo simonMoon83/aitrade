@@ -72,6 +72,7 @@ class PortfolioManager:
         self.positions: Dict[str, Position] = {}
         self.trades: List[Trade] = []
         self.daily_values: List[Dict] = []
+        self.portfolio_history: List[Dict] = []
         
         # 성과 추적
         self.total_commission = 0.0
@@ -265,12 +266,13 @@ class PortfolioManager:
         """모든 포지션 반환"""
         return self.positions.copy()
     
-    def record_daily_value(self, current_prices: Dict[str, float], date: date):
-        """일일 포트폴리오 가치 기록"""
+    def record_daily_value(self, current_prices: Dict[str, float], timestamp: datetime):
+        """포트폴리오 스냅샷 기록"""
         portfolio_value = self.get_portfolio_value(current_prices)
         
         daily_record = {
-            'date': date,
+            'date': timestamp.date(),
+            'timestamp': timestamp,
             'portfolio_value': portfolio_value,
             'cash': self.cash,
             'positions_value': portfolio_value - self.cash,
@@ -280,6 +282,11 @@ class PortfolioManager:
         }
         
         self.daily_values.append(daily_record)
+        self.portfolio_history.append({
+            'timestamp': timestamp,
+            'total_value': portfolio_value,
+            'cash': self.cash
+        })
     
     def get_performance_metrics(self) -> Dict:
         """성과 지표 계산"""
@@ -287,6 +294,7 @@ class PortfolioManager:
             return {}
 
         df = pd.DataFrame(self.daily_values)
+        df = df.sort_values('timestamp')
 
         # 기본 지표
         total_return = (df['portfolio_value'].iloc[-1] - self.initial_capital) / self.initial_capital

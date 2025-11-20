@@ -833,6 +833,7 @@ class PaperTrader:
 
             # 상태 파일 저장 (대시보드용)
             self._save_status_file(portfolio_value, cash, positions)
+            self.portfolio_manager.record_daily_value(self.current_prices, datetime.now())
 
         except Exception as e:
             log_error(logger, e, "포트폴리오 상태 로그")
@@ -1135,6 +1136,25 @@ class PaperTrader:
             except Exception as e:
                 logger.debug(f"거래 히스토리 직렬화 실패: {str(e)}")
                 status_data['trade_history'] = []
+
+            try:
+                history = getattr(self.portfolio_manager, 'portfolio_history', [])
+                if history:
+                    status_data['portfolio_history'] = [
+                        {
+                            'timestamp': (entry['timestamp'].isoformat()
+                                          if isinstance(entry.get('timestamp'), (datetime, pd.Timestamp))
+                                          else str(entry.get('timestamp'))),
+                            'total_value': entry.get('total_value', 0),
+                            'cash': entry.get('cash', 0)
+                        }
+                        for entry in history[-500:]
+                    ]
+                else:
+                    status_data['portfolio_history'] = []
+            except Exception as e:
+                logger.debug(f"포트폴리오 히스토리 직렬화 실패: {str(e)}")
+                status_data['portfolio_history'] = []
 
             with open(status_file, 'w') as f:
                 json.dump(status_data, f, indent=2)
