@@ -30,6 +30,8 @@ import time as time_module
 import threading
 from dataclasses import dataclass
 
+import yfinance as yf
+
 try:
     import alpaca_trade_api as tradeapi
     ALPACA_AVAILABLE = True
@@ -64,6 +66,7 @@ class PaperTrader:
         self.short_term_symbols = []  # 시스템이 선정한 단기 종목
         self.is_running = False
         self.trading_thread = None
+        self.long_term_initialized = False
         
         # Alpaca API 초기화
         if not ALPACA_AVAILABLE:
@@ -135,6 +138,9 @@ class PaperTrader:
 
         # 포트폴리오 동기화
         self._sync_portfolio()
+
+        # 장기 투자 비중 초기 매수
+        self._initialize_long_term_positions()
 
         # 초기 상태 파일 생성 (즉시 생성)
         try:
@@ -864,6 +870,141 @@ class PaperTrader:
                 
         except Exception as e:
             log_error(logger, e, "종목 리스트 업데이트")
+
+    def _initialize_long_term_positions(self):
+        """PaperTrader 시작 시 장기 종목을 보유 자산의 절반으로 매수"""
+        if self.long_term_initialized:
+            return
+
+        self.long_term_initialized = True
+
+        try:
+            long_term_symbols = self.settings_manager.get_long_term_symbols()
+            if not long_term_symbols:
+                logger.info("장기 투자 종목이 없어 초기 매수를 생략합니다.")
+                return
+
+            existing_positions = self.portfolio_manager.get_all_positions()
+            symbols_to_buy = [s for s in long_term_symbols if s not in existing_positions]
+            if not symbols_to_buy:
+                logger.info("모든 장기 종목을 이미 보유 중입니다. 초기 매수를 생략합니다.")
+                return
+
+            portfolio_value = self.portfolio_manager.get_portfolio_value(self.current_prices)
+            cash_available = self.portfolio_manager.cash
+            target_budget = min(cash_available, max(0, portfolio_value * 0.5))
+
+            if target_budget < 1:
+                logger.info("장기 투자 매수: 사용할 자금이 부족하여 생략합니다.")
+                return
+
+            market_data: Dict[str, Dict[str, float]] = {}
+            for symbol in symbols_to_buy:
+                data = self._fetch_symbol_market_data(symbol)
+                if data:
+                    market_data[symbol] = data
+
+            if not market_data:
+                logger.warning("장기 투자 매수를 위한 시세/시총 정보를 가져오지 못했습니다.")
+                return
+
+            total_market_cap = sum(
+                data['market_cap'] for data in market_data.values() if data.get('market_cap', 0) > 0
+            )
+
+            if total_market_cap <= 0:
+                equal_weight = 1 / len(market_data)
+                weights = {symbol: equal_weight for symbol in market_data}
+            else:
+                weights = {
+                    symbol: data.get('market_cap', 0) / total_market_cap if data.get('market_cap', 0) > 0 else 0
+                    for symbol, data in market_data.items()
+                }
+
+                weight_sum = sum(weights.values())
+                if weight_sum == 0:
+                    equal_weight = 1 / len(market_data)
+                    weights = {symbol: equal_weight for symbol in market_data}
+                else:
+                    weights = {symbol: weight / weight_sum for symbol, weight in weights.items()}
+
+            logger.info(f"장기 투자 초기 매수 대상: {list(market_data.keys())}")
+
+            orders_submitted = 0
+            for symbol, data in market_data.items():
+                price = data.get('price', 0)
+                if price <= 0:
+                    logger.warning(f"{symbol} 가격 정보를 가져오지 못해 매수를 건너뜁니다.")
+                    continue
+
+                allocation = target_budget * weights.get(symbol, 0)
+                quantity = int(allocation // price)
+                if quantity <= 0:
+                    logger.info(f"{symbol} 배정 금액이 부족해 매수를 건너뜁니다. (배정: ${allocation:.2f})")
+                    continue
+
+                try:
+                    self.api.submit_order(
+                        symbol=symbol,
+                        qty=quantity,
+                        side='buy',
+                        type='market',
+                        time_in_force='day'
+                    )
+                    logger.info(f"🛒 장기 투자 매수: {symbol} {quantity}주 @ ${price:.2f} (배정 자금 ${allocation:,.2f})")
+                    self.daily_trade_count += 1
+                    orders_submitted += 1
+                except Exception as e:
+                    log_error(logger, e, f"장기 투자 매수 주문 {symbol}")
+
+            if orders_submitted:
+                logger.info(f"장기 투자 초기 매수 완료: {orders_submitted}건의 주문이 제출되었습니다.")
+                self._sync_portfolio()
+            else:
+                logger.info("장기 투자 초기 매수에서 실행된 주문이 없습니다.")
+
+        except Exception as e:
+            log_error(logger, e, "장기 투자 초기 매수")
+
+    def _fetch_symbol_market_data(self, symbol: str) -> Optional[Dict[str, float]]:
+        """yfinance를 사용해 현재가와 시가총액을 조회"""
+        try:
+            ticker = yf.Ticker(symbol)
+            price = None
+            market_cap = None
+
+            try:
+                fast_info = getattr(ticker, "fast_info", None)
+                if fast_info:
+                    price = fast_info.get("last_price") or fast_info.get("regular_market_price")
+                    market_cap = fast_info.get("market_cap")
+            except Exception:
+                pass
+
+            if price is None or price <= 0 or market_cap is None or market_cap <= 0:
+                info = ticker.info or {}
+                price = price or info.get("regularMarketPrice") or info.get("currentPrice")
+                market_cap = market_cap or info.get("marketCap")
+
+            if price is None or price <= 0:
+                hist = ticker.history(period="1d")
+                if not hist.empty:
+                    price = float(hist['Close'].iloc[-1])
+
+            if price is None or price <= 0:
+                return None
+
+            if market_cap is None or market_cap <= 0:
+                # 시장가총액이 없으면 가격 기반 동일 가중치 fallback
+                market_cap = price
+
+            return {
+                'price': float(price),
+                'market_cap': float(market_cap)
+            }
+        except Exception as e:
+            logger.debug(f"{symbol} 시가총액/가격 조회 실패: {str(e)}")
+            return None
 
     def _select_short_term_symbols(self, candidates: List[str], count: int) -> List[str]:
         """모멘텀 기반으로 단기 후보군 점수를 계산해 최상위 종목을 선택"""
